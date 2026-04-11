@@ -21,6 +21,8 @@ Chart.defaults.plugins.legend.labels.pointStyleWidth = 8;
 let trafficChart = null;
 let responseTimeChart = null;
 let errorRateChart = null;
+let dbQueryChart = null;
+let memoryChart = null;
 
 // --- Navigation ---
 const pages = ['overview', 'traffic', 'logs', 'costs', 'endpoints'];
@@ -117,6 +119,84 @@ function renderErrorRateChart(hourly) {
 
   if (errorRateChart) { errorRateChart.data = data; errorRateChart.update(); }
   else { errorRateChart = new Chart(ctx, { type: 'line', data, options: opts }); }
+}
+
+// --- DB Query Performance Chart ---
+function renderDbQueryChart(dbHourly) {
+  const ctx = document.getElementById('dbQueryCanvas');
+  if (!ctx) return;
+  if (!dbHourly || dbHourly.length === 0) return;
+
+  const labels = dbHourly.map(h => h.hour.slice(11) + 'h');
+  const data = {
+    labels,
+    datasets: [
+      { label: 'Avg', data: dbHourly.map(h => h.avg_ms), borderColor: '#3b82f6', backgroundColor: '#3b82f622', tension: 0.3, pointRadius: 2, fill: false },
+      { label: 'p95', data: dbHourly.map(h => h.p95), borderColor: '#f59e0b', backgroundColor: '#f59e0b22', tension: 0.3, pointRadius: 2, fill: false },
+      { label: 'p99', data: dbHourly.map(h => h.p99), borderColor: '#ef4444', backgroundColor: '#ef444422', tension: 0.3, pointRadius: 2, fill: false },
+    ],
+  };
+  const opts = {
+    responsive: true, maintainAspectRatio: false,
+    scales: { x: { grid: { display: false } }, y: { beginAtZero: true, ticks: { callback: v => v + 'ms' } } },
+    plugins: {
+      legend: { position: 'bottom' },
+      tooltip: { mode: 'index', intersect: false, callbacks: { label: ctx => ctx.dataset.label + ': ' + ctx.parsed.y + 'ms (' + (dbHourly[ctx.dataIndex]?.queries ?? 0) + ' queries)' } },
+    },
+  };
+
+  if (dbQueryChart) { dbQueryChart.data = data; dbQueryChart.update(); }
+  else { dbQueryChart = new Chart(ctx, { type: 'line', data, options: opts }); }
+}
+
+// --- Memory Usage Chart ---
+function renderMemoryChart(memory) {
+  const ctx = document.getElementById('memoryCanvas');
+  if (!ctx) return;
+  if (!memory || memory.length === 0) return;
+
+  const labels = memory.map(m => {
+    const d = new Date(m.time);
+    return d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0');
+  });
+  const data = {
+    labels,
+    datasets: [
+      { label: 'Heap Used', data: memory.map(m => m.heapUsed), borderColor: '#8b5cf6', backgroundColor: '#8b5cf633', tension: 0.3, pointRadius: 0, fill: true },
+      { label: 'RSS', data: memory.map(m => m.rss), borderColor: '#64748b', backgroundColor: '#64748b22', tension: 0.3, pointRadius: 0, fill: true, borderDash: [4, 2] },
+    ],
+  };
+
+  // 256MB line for Fly.io limit
+  const maxMem = Math.max(...memory.map(m => m.rss), 256);
+  const opts = {
+    responsive: true, maintainAspectRatio: false,
+    scales: {
+      x: { grid: { display: false }, ticks: { maxTicksLimit: 12 } },
+      y: { beginAtZero: true, max: Math.min(maxMem + 20, 300), ticks: { callback: v => v + 'MB' } },
+    },
+    plugins: {
+      legend: { position: 'bottom' },
+      tooltip: { mode: 'index', intersect: false, callbacks: { label: ctx => ctx.dataset.label + ': ' + ctx.parsed.y + 'MB' } },
+      annotation: undefined, // no annotation plugin, use a simple line dataset instead
+    },
+  };
+
+  // Add 256MB limit line as a dataset
+  if (data.datasets.length < 3) {
+    data.datasets.push({
+      label: 'Limit (256MB)',
+      data: memory.map(() => 256),
+      borderColor: '#ef4444',
+      borderDash: [6, 3],
+      pointRadius: 0,
+      fill: false,
+      borderWidth: 1,
+    });
+  }
+
+  if (memoryChart) { memoryChart.data = data; memoryChart.update(); }
+  else { memoryChart = new Chart(ctx, { type: 'line', data, options: opts }); }
 }
 
 // --- Health Timeline ---
@@ -262,6 +342,12 @@ async function loadMetrics() {
     renderResponseTimeChart(m.hourly);
     renderErrorRateChart(m.hourly);
     renderHealthTimeline(m.health);
+
+    // System metrics (Phase 2)
+    if (m.system) {
+      renderDbQueryChart(m.system.db_hourly);
+      renderMemoryChart(m.system.memory);
+    }
 
     // Top endpoints
     renderTopEndpoints('overviewTopEndpoints', m.top_endpoints, true);

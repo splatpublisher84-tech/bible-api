@@ -9,6 +9,7 @@ const verseController = require('../controllers/verse.controller');
 const votdController = require('../controllers/votd.controller');
 const statusController = require('../controllers/status.controller');
 const { getMetrics } = require('../middlewares/requestTracker');
+const { getSystemMetrics } = require('../middlewares/systemTracker');
 
 const router = Router();
 
@@ -33,7 +34,7 @@ router.get('/metrics', (req, res) => {
   if (key && req.query.key !== key) {
     return res.status(401).json({ error: 'Invalid or missing metrics key' });
   }
-  res.json(getMetrics());
+  res.json({ ...getMetrics(), system: getSystemMetrics() });
 });
 
 router.get('/search',

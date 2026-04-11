@@ -1,4 +1,5 @@
 const { Pool } = require('pg');
+const { trackQuery } = require('../middlewares/systemTracker');
 require('dotenv').config();
 
 const pool = new Pool({
@@ -12,6 +13,20 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: false },
   }),
 });
+
+// Wrap pool.query to track performance
+const originalQuery = pool.query.bind(pool);
+pool.query = async function (...args) {
+  const start = Date.now();
+  try {
+    const result = await originalQuery(...args);
+    trackQuery(Date.now() - start, false);
+    return result;
+  } catch (err) {
+    trackQuery(Date.now() - start, true);
+    throw err;
+  }
+};
 
 // Test connection
 pool.on('connect', () => {
