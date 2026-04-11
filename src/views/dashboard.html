@@ -1,63 +1,92 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Bible API — Dashboard</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
-    .container { max-width: 960px; margin: 0 auto; padding: 32px 20px; }
-    h1 { font-size: 24px; font-weight: 600; margin-bottom: 4px; }
-    .subtitle { color: #94a3b8; font-size: 14px; margin-bottom: 32px; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px; }
-    .card { background: #1e293b; border-radius: 12px; padding: 20px; border: 1px solid #334155; }
-    .card-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; margin-bottom: 8px; }
-    .card-value { font-size: 28px; font-weight: 700; }
-    .card-detail { font-size: 13px; color: #64748b; margin-top: 4px; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; display: flex; }
+
+    /* Sidebar */
+    .sidebar { width: 220px; background: #1e293b; border-right: 1px solid #334155; padding: 20px 0; display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 10; }
+    .sidebar-brand { padding: 0 20px 20px; border-bottom: 1px solid #334155; margin-bottom: 8px; }
+    .sidebar-brand h1 { font-size: 16px; font-weight: 700; color: #e2e8f0; }
+    .sidebar-brand p { font-size: 11px; color: #64748b; margin-top: 2px; }
+    .nav-section { padding: 12px 12px 4px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: #475569; font-weight: 600; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 20px; cursor: pointer; font-size: 13px; color: #94a3b8; transition: all 0.15s; border-left: 3px solid transparent; }
+    .nav-item:hover { background: #334155; color: #e2e8f0; }
+    .nav-item.active { background: #334155; color: #60a5fa; border-left-color: #60a5fa; font-weight: 600; }
+    .nav-icon { width: 16px; text-align: center; font-size: 14px; }
+    .sidebar-footer { margin-top: auto; padding: 16px 20px; border-top: 1px solid #334155; }
+    .sidebar-footer a { color: #64748b; text-decoration: none; font-size: 12px; display: block; padding: 4px 0; }
+    .sidebar-footer a:hover { color: #93c5fd; }
+
+    /* Main */
+    .main { margin-left: 220px; flex: 1; padding: 24px 32px 60px; min-height: 100vh; }
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .page-title { font-size: 20px; font-weight: 600; }
+    .header-actions { display: flex; align-items: center; gap: 12px; }
+    .refresh-btn { background: #334155; border: none; color: #e2e8f0; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+    .refresh-btn:hover { background: #475569; }
+    .last-update { font-size: 11px; color: #64748b; }
+
+    /* Page sections */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* Cards grid */
+    .grid { display: grid; gap: 16px; margin-bottom: 24px; }
+    .grid-4 { grid-template-columns: repeat(4, 1fr); }
+    .grid-3 { grid-template-columns: repeat(3, 1fr); }
+    .grid-2 { grid-template-columns: repeat(2, 1fr); }
+    .grid-2-1 { grid-template-columns: 1fr 1.5fr; }
+    .card { background: #1e293b; border-radius: 10px; padding: 18px; border: 1px solid #334155; }
+    .card-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; margin-bottom: 6px; }
+    .card-value { font-size: 26px; font-weight: 700; }
+    .card-detail { font-size: 12px; color: #64748b; margin-top: 3px; }
     .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
     .status-ok { background: #22c55e; box-shadow: 0 0 6px #22c55e; }
     .status-error { background: #ef4444; box-shadow: 0 0 6px #ef4444; }
     .status-loading { background: #f59e0b; box-shadow: 0 0 6px #f59e0b; }
-    .section { margin-bottom: 32px; }
-    .section-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #cbd5e1; }
-    .links { display: flex; flex-wrap: wrap; gap: 12px; }
-    .link-card { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 16px 20px; text-decoration: none; color: #e2e8f0; transition: border-color 0.2s; flex: 1; min-width: 180px; }
-    .link-card:hover { border-color: #60a5fa; }
-    .link-card-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
-    .link-card-desc { font-size: 12px; color: #94a3b8; }
-    .refresh-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-    .refresh-btn { background: #334155; border: none; color: #e2e8f0; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; }
-    .refresh-btn:hover { background: #475569; }
-    .last-update { font-size: 12px; color: #64748b; }
-    .endpoints-table { width: 100%; border-collapse: collapse; }
-    .endpoints-table th, .endpoints-table td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #334155; font-size: 13px; }
-    .endpoints-table th { color: #94a3b8; font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
-    .endpoints-table td { color: #e2e8f0; }
-    .method { background: #1d4ed8; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
-    .endpoint-path { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; color: #93c5fd; }
+
+    /* Section title */
+    .section-title { font-size: 14px; font-weight: 600; color: #cbd5e1; margin-bottom: 12px; }
+
+    /* Progress bar */
     .progress-bar { background: #334155; border-radius: 6px; height: 8px; margin-top: 8px; overflow: hidden; }
     .progress-fill { height: 100%; border-radius: 6px; transition: width 0.5s; }
     .progress-ok { background: #22c55e; }
     .progress-warn { background: #f59e0b; }
     .progress-danger { background: #ef4444; }
-    .warning-banner { background: #451a03; border: 1px solid #92400e; border-radius: 10px; padding: 14px 18px; margin-bottom: 24px; display: none; }
-    .warning-banner .warning-title { color: #fbbf24; font-weight: 600; font-size: 14px; margin-bottom: 4px; }
-    .warning-banner .warning-text { color: #fcd34d; font-size: 13px; }
-    .cost-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #334155; }
+
+    /* Cost rows */
+    .cost-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #334155; font-size: 13px; }
     .cost-row:last-child { border-bottom: none; }
-    .cost-label { font-size: 13px; color: #94a3b8; }
-    .cost-value { font-size: 14px; font-weight: 600; }
+    .cost-label { color: #94a3b8; }
+    .cost-value { font-weight: 600; }
     .cost-free { color: #22c55e; }
+
+    /* Warning */
+    .warning-banner { background: #451a03; border: 1px solid #92400e; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; display: none; }
+    .warning-title { color: #fbbf24; font-weight: 600; font-size: 13px; margin-bottom: 2px; }
+    .warning-text { color: #fcd34d; font-size: 12px; }
+
     /* Chart */
-    .chart { display: flex; align-items: flex-end; gap: 3px; height: 120px; padding: 8px 0; }
+    .chart { display: flex; align-items: flex-end; gap: 2px; height: 130px; padding: 8px 0; }
     .chart-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; }
-    .chart-bar { width: 100%; min-width: 8px; border-radius: 3px 3px 0 0; background: #3b82f6; transition: height 0.3s; position: relative; }
-    .chart-bar.has-errors { background: linear-gradient(to top, #ef4444 0%, #3b82f6 30%); }
+    .chart-bar-stack { width: 100%; min-width: 6px; display: flex; flex-direction: column; justify-content: flex-end; }
+    .chart-bar-client { background: #3b82f6; border-radius: 3px 3px 0 0; transition: height 0.3s; }
+    .chart-bar-internal { background: #475569; transition: height 0.3s; }
+    .chart-bar-error { background: #ef4444; transition: height 0.3s; }
     .chart-bar-label { font-size: 9px; color: #64748b; margin-top: 4px; white-space: nowrap; }
     .chart-bar-count { font-size: 9px; color: #94a3b8; margin-bottom: 2px; }
+    .chart-legend { display: flex; gap: 16px; margin-top: 8px; }
+    .chart-legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #94a3b8; }
+    .chart-legend-dot { width: 10px; height: 10px; border-radius: 2px; }
     .chart-empty { text-align: center; color: #475569; font-size: 13px; padding: 40px 0; }
-    /* Logs */
+
+    /* Tables */
     .log-table { width: 100%; border-collapse: collapse; }
     .log-table th, .log-table td { text-align: left; padding: 7px 10px; border-bottom: 1px solid #1e293b; font-size: 12px; }
     .log-table th { color: #64748b; font-weight: 500; font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; position: sticky; top: 0; background: #1e293b; }
@@ -67,70 +96,210 @@
     .log-3xx { background: #1e3a5f; color: #60a5fa; }
     .log-4xx { background: #451a03; color: #fbbf24; }
     .log-5xx { background: #450a0a; color: #f87171; }
-    .log-scroll { max-height: 300px; overflow-y: auto; }
+    .log-scroll { max-height: 340px; overflow-y: auto; }
+    .source-badge { padding: 1px 6px; border-radius: 3px; font-size: 10px; font-weight: 600; }
+    .source-client { background: #1e3a5f; color: #60a5fa; }
+    .source-internal { background: #1e293b; color: #64748b; border: 1px solid #334155; }
+
     /* Top endpoints */
-    .top-ep { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #1e293b; font-size: 13px; }
-    .top-ep:last-child { border-bottom: none; }
-    .top-ep-name { color: #93c5fd; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; }
-    .top-ep-count { color: #e2e8f0; font-weight: 600; }
-    @media (max-width: 600px) { .grid { grid-template-columns: 1fr 1fr; } .card-value { font-size: 22px; } }
+    .ep-table { width: 100%; border-collapse: collapse; }
+    .ep-table th, .ep-table td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #1e293b; font-size: 12px; }
+    .ep-table th { color: #64748b; font-weight: 500; font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .ep-table td { color: #94a3b8; }
+    .ep-name { font-family: 'SF Mono', 'Fira Code', monospace; color: #93c5fd; font-size: 12px; }
+    .ep-bar { display: flex; gap: 2px; height: 6px; border-radius: 3px; overflow: hidden; min-width: 60px; }
+    .ep-bar-client { background: #3b82f6; height: 100%; }
+    .ep-bar-internal { background: #475569; height: 100%; }
+
+    /* API reference table */
+    .ref-table { width: 100%; border-collapse: collapse; }
+    .ref-table th, .ref-table td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #334155; font-size: 13px; }
+    .ref-table th { color: #94a3b8; font-weight: 500; font-size: 11px; text-transform: uppercase; }
+    .method-badge { background: #1d4ed8; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+    .ref-path { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; color: #93c5fd; }
+
+    /* Links */
+    .links { display: flex; flex-wrap: wrap; gap: 12px; }
+    .link-card { background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 14px 18px; text-decoration: none; color: #e2e8f0; transition: border-color 0.15s; flex: 1; min-width: 180px; }
+    .link-card:hover { border-color: #60a5fa; }
+    .link-card-title { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+    .link-card-desc { font-size: 11px; color: #94a3b8; }
+
+    /* Stat summary row */
+    .stat-row { display: flex; gap: 24px; margin-bottom: 4px; }
+    .stat-item { font-size: 13px; color: #94a3b8; }
+    .stat-item strong { color: #e2e8f0; font-size: 18px; margin-right: 4px; }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .sidebar { width: 60px; }
+      .sidebar-brand h1, .sidebar-brand p, .nav-section, .nav-item span:not(.nav-icon), .sidebar-footer { display: none; }
+      .nav-item { justify-content: center; padding: 12px; }
+      .main { margin-left: 60px; padding: 20px 16px; }
+      .grid-4 { grid-template-columns: repeat(2, 1fr); }
+      .grid-2-1 { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 500px) {
+      .grid-4, .grid-3 { grid-template-columns: 1fr 1fr; }
+      .card-value { font-size: 20px; }
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Bible API Dashboard</h1>
-    <p class="subtitle">System monitoring for the team</p>
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-brand">
+      <h1>Bible API</h1>
+      <p>Dashboard</p>
+    </div>
+    <div class="nav-section">Monitor</div>
+    <div class="nav-item active" onclick="switchPage('overview')">
+      <span class="nav-icon">&#9632;</span><span>Overview</span>
+    </div>
+    <div class="nav-item" onclick="switchPage('traffic')">
+      <span class="nav-icon">&#9650;</span><span>Traffic</span>
+    </div>
+    <div class="nav-item" onclick="switchPage('logs')">
+      <span class="nav-icon">&#9776;</span><span>Logs</span>
+    </div>
+    <div class="nav-section">Info</div>
+    <div class="nav-item" onclick="switchPage('costs')">
+      <span class="nav-icon">&#36;</span><span>Costs</span>
+    </div>
+    <div class="nav-item" onclick="switchPage('endpoints')">
+      <span class="nav-icon">&#10095;</span><span>API Reference</span>
+    </div>
+    <div class="sidebar-footer">
+      <a href="/demo" target="_blank">Demo App</a>
+      <a href="/api-docs" target="_blank">Swagger Docs</a>
+      <a href="https://github.com/splatpublisher84-tech/bible-api" target="_blank">GitHub</a>
+    </div>
+  </nav>
 
-    <div class="refresh-bar">
-      <button class="refresh-btn" onclick="loadData()">Refresh</button>
-      <span class="last-update" id="lastUpdate">Loading...</span>
+  <!-- Main content -->
+  <div class="main">
+    <div class="page-header">
+      <div class="page-title" id="pageTitle">Overview</div>
+      <div class="header-actions">
+        <span class="last-update" id="lastUpdate">Loading...</span>
+        <button class="refresh-btn" onclick="loadAll()">Refresh</button>
+      </div>
     </div>
 
-    <div class="grid">
-      <div class="card">
-        <div class="card-label">API Status</div>
-        <div class="card-value"><span class="status-dot status-loading" id="apiDot"></span><span id="apiStatus">...</span></div>
-        <div class="card-detail" id="apiUptime"></div>
+    <!-- OVERVIEW PAGE -->
+    <div class="page active" id="page-overview">
+      <div class="warning-banner" id="warningBanner">
+        <div class="warning-title" id="warningTitle"></div>
+        <div class="warning-text" id="warningText"></div>
       </div>
-      <div class="card">
-        <div class="card-label">Database</div>
-        <div class="card-value"><span class="status-dot status-loading" id="dbDot"></span><span id="dbStatus">...</span></div>
-        <div class="card-detail" id="dbLatency"></div>
+
+      <div class="grid grid-4">
+        <div class="card">
+          <div class="card-label">API Status</div>
+          <div class="card-value"><span class="status-dot status-loading" id="apiDot"></span><span id="apiStatus">...</span></div>
+          <div class="card-detail" id="apiUptime"></div>
+        </div>
+        <div class="card">
+          <div class="card-label">Database</div>
+          <div class="card-value"><span class="status-dot status-loading" id="dbDot"></span><span id="dbStatus">...</span></div>
+          <div class="card-detail" id="dbLatency"></div>
+        </div>
+        <div class="card">
+          <div class="card-label">Client Requests</div>
+          <div class="card-value" id="clientRequests">-</div>
+          <div class="card-detail" id="clientRequestsDetail"></div>
+        </div>
+        <div class="card">
+          <div class="card-label">Errors</div>
+          <div class="card-value" id="totalErrors">-</div>
+        </div>
       </div>
-      <div class="card">
-        <div class="card-label">Translations</div>
-        <div class="card-value" id="translations">-</div>
+
+      <div class="grid grid-3">
+        <div class="card">
+          <div class="card-label">Translations</div>
+          <div class="card-value" id="translations">-</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Total Verses</div>
+          <div class="card-value" id="verses">-</div>
+          <div class="card-detail" id="books"></div>
+        </div>
+        <div class="card">
+          <div class="card-label">DB Usage</div>
+          <div class="card-value" id="dbSizeOverview">-</div>
+          <div class="card-detail" id="dbLimitOverview"></div>
+          <div class="progress-bar"><div class="progress-fill progress-ok" id="dbProgressOverview" style="width:0%"></div></div>
+        </div>
       </div>
-      <div class="card">
-        <div class="card-label">Total Verses</div>
-        <div class="card-value" id="verses">-</div>
-        <div class="card-detail" id="books"></div>
+
+      <div class="section-title">Hourly Traffic (last 24h)</div>
+      <div class="card" style="margin-bottom: 24px;">
+        <div id="overviewChart"><div class="chart-empty">No data yet</div></div>
       </div>
+
+      <div class="section-title">Top Endpoints</div>
       <div class="card">
-        <div class="card-label">Memory</div>
-        <div class="card-value" id="memory">-</div>
-        <div class="card-detail" id="nodeVersion"></div>
-      </div>
-      <div class="card">
-        <div class="card-label">Environment</div>
-        <div class="card-value" id="env">-</div>
+        <div id="overviewTopEndpoints"><div class="chart-empty">No data yet</div></div>
       </div>
     </div>
 
-    <div class="warning-banner" id="warningBanner">
-      <div class="warning-title" id="warningTitle"></div>
-      <div class="warning-text" id="warningText"></div>
+    <!-- TRAFFIC PAGE -->
+    <div class="page" id="page-traffic">
+      <div class="grid grid-4">
+        <div class="card">
+          <div class="card-label">Total Requests</div>
+          <div class="card-value" id="trafficTotal">-</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Client</div>
+          <div class="card-value" style="color:#3b82f6" id="trafficClient">-</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Internal</div>
+          <div class="card-value" style="color:#64748b" id="trafficInternal">-</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Errors</div>
+          <div class="card-value" style="color:#ef4444" id="trafficErrors">-</div>
+        </div>
+      </div>
+
+      <div class="section-title">Requests per Hour</div>
+      <div class="card" style="margin-bottom: 24px;">
+        <div id="trafficChart"><div class="chart-empty">No data yet</div></div>
+      </div>
+
+      <div class="section-title">Top Endpoints by Source</div>
+      <div class="card">
+        <table class="ep-table" id="trafficEndpoints">
+          <thead><tr><th>Endpoint</th><th>Client</th><th>Internal</th><th>Total</th><th>Breakdown</th></tr></thead>
+          <tbody><tr><td colspan="5" style="text-align:center;color:#475569;padding:24px;">No data yet</td></tr></tbody>
+        </table>
+      </div>
     </div>
 
-    <div class="section">
-      <div class="section-title">Chi phi & Gioi han</div>
-      <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+    <!-- LOGS PAGE -->
+    <div class="page" id="page-logs">
+      <div class="card">
+        <div class="log-scroll" id="logsContainer">
+          <table class="log-table">
+            <thead><tr><th>Time</th><th>Source</th><th>Method</th><th>Path</th><th>Status</th><th>Duration</th></tr></thead>
+            <tbody id="logBody"><tr><td colspan="6" style="text-align:center;color:#475569;padding:30px;">No data yet</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- COSTS PAGE -->
+    <div class="page" id="page-costs">
+      <div class="grid grid-2">
         <div class="card">
           <div class="card-label">Supabase Database</div>
           <div class="card-value" id="dbSize">-</div>
           <div class="card-detail" id="dbLimit"></div>
-          <div class="progress-bar"><div class="progress-fill progress-ok" id="dbProgress" style="width: 0%"></div></div>
-          <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #334155;">
+          <div class="progress-bar"><div class="progress-fill progress-ok" id="dbProgress" style="width:0%"></div></div>
+          <div style="margin-top: 14px; padding-top: 14px; border-top: 1px solid #334155;">
             <div class="cost-row"><span class="cost-label">Tier</span><span class="cost-value cost-free" id="supabaseTier">Free</span></div>
           </div>
         </div>
@@ -138,85 +307,30 @@
           <div class="card-label">Fly.io Compute</div>
           <div class="card-value" id="flyEstimate">-</div>
           <div class="card-detail" id="flyVm"></div>
-          <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #334155;">
+          <div style="margin-top: 14px; padding-top: 14px; border-top: 1px solid #334155;">
             <div class="cost-row"><span class="cost-label">Auto-stop</span><span class="cost-value cost-free" id="flyAutoStop">-</span></div>
             <div class="cost-row"><span class="cost-label">Min machines</span><span class="cost-value" id="flyMinMachines">-</span></div>
             <div class="cost-row"><span class="cost-label">Tier</span><span class="cost-value cost-free" id="flyTier">-</span></div>
           </div>
         </div>
       </div>
-    </div>
-
-    <div class="section">
-      <div class="section-title">Requests / Gio (24h)</div>
-      <div class="card">
-        <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 0;">
-          <div>
-            <div class="card-label">Total Requests</div>
-            <div class="card-value" id="totalRequests">-</div>
-            <div class="card-detail" id="totalErrors"></div>
-          </div>
-          <div>
-            <div class="card-label">Avg Response</div>
-            <div class="card-value" id="avgResponse">-</div>
-          </div>
+      <div class="grid grid-3" style="margin-top: 0;">
+        <div class="card">
+          <div class="card-label">Memory</div>
+          <div class="card-value" id="memory">-</div>
+          <div class="card-detail" id="nodeVersion"></div>
         </div>
-        <div id="hourlyChart" style="margin-top: 16px;"><div class="chart-empty">Chua co du lieu</div></div>
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="section-title" style="display:flex;justify-content:space-between;">
-        <span>Top Endpoints</span>
-        <span style="font-size:12px;color:#64748b;font-weight:400;">Recent Logs</span>
-      </div>
-      <div class="grid" style="grid-template-columns: 1fr 1.5fr;">
-        <div class="card" style="padding: 12px 16px;">
-          <div id="topEndpoints"><div class="chart-empty">Chua co du lieu</div></div>
+        <div class="card">
+          <div class="card-label">Environment</div>
+          <div class="card-value" id="env">-</div>
         </div>
-        <div class="card" style="padding: 0; overflow: hidden;">
-          <div class="log-scroll" id="recentLogs">
-            <table class="log-table">
-              <thead><tr><th>Time</th><th>Method</th><th>Path</th><th>Status</th><th>Duration</th></tr></thead>
-              <tbody id="logBody"><tr><td colspan="5" style="text-align:center;color:#475569;padding:30px;">Chua co du lieu</td></tr></tbody>
-            </table>
-          </div>
+        <div class="card">
+          <div class="card-label">Uptime</div>
+          <div class="card-value" id="uptimeCard">-</div>
         </div>
       </div>
-    </div>
-
-    <div class="section">
-      <div class="section-title">API Endpoints</div>
-      <div class="card" style="padding: 0; overflow: auto;">
-        <table class="endpoints-table">
-          <thead>
-            <tr><th>Method</th><th>Endpoint</th><th>Description</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><span class="method">GET</span></td><td class="endpoint-path">/api/translations</td><td>Danh sach ban dich</td></tr>
-            <tr><td><span class="method">GET</span></td><td class="endpoint-path">/api/translations/:abbr</td><td>Chi tiet ban dich</td></tr>
-            <tr><td><span class="method">GET</span></td><td class="endpoint-path">/api/books?translation=</td><td>66 sach Kinh Thanh</td></tr>
-            <tr><td><span class="method">GET</span></td><td class="endpoint-path">/api/books/:id/chapters</td><td>Chuong va so cau</td></tr>
-            <tr><td><span class="method">GET</span></td><td class="endpoint-path">/api/verses/:t/:b/:c</td><td>Tat ca cau trong chuong</td></tr>
-            <tr><td><span class="method">GET</span></td><td class="endpoint-path">/api/verses/:t/:b/:c/:v</td><td>Mot cau cu the</td></tr>
-            <tr><td><span class="method">GET</span></td><td class="endpoint-path">/api/votd</td><td>Cau Goc Moi Ngay</td></tr>
-            <tr><td><span class="method">GET</span></td><td class="endpoint-path">/api/search?q=&translation=</td><td>Tim kiem toan van</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="section-title">Quick Links</div>
+      <div class="section-title" style="margin-top:8px;">External Dashboards</div>
       <div class="links">
-        <a class="link-card" href="/demo" target="_blank" style="border-color: #1d4ed8;">
-          <div class="link-card-title">Demo App</div>
-          <div class="link-card-desc">Test API tren giao dien thuc te</div>
-        </a>
-        <a class="link-card" href="/api-docs" target="_blank">
-          <div class="link-card-title">Swagger Docs</div>
-          <div class="link-card-desc">API documentation cho dev</div>
-        </a>
         <a class="link-card" href="https://fly.io/apps/bible-api-ibsnxg" target="_blank">
           <div class="link-card-title">Fly.io Dashboard</div>
           <div class="link-card-desc">Logs, metrics, billing</div>
@@ -225,16 +339,112 @@
           <div class="link-card-title">Supabase Dashboard</div>
           <div class="link-card-desc">Database, usage, storage</div>
         </a>
-        <a class="link-card" href="https://github.com/splatpublisher84-tech/bible-api" target="_blank">
-          <div class="link-card-title">GitHub Repo</div>
-          <div class="link-card-desc">Source code & issues</div>
-        </a>
+      </div>
+    </div>
+
+    <!-- ENDPOINTS PAGE -->
+    <div class="page" id="page-endpoints">
+      <div class="card" style="padding: 0; overflow: auto;">
+        <table class="ref-table">
+          <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><span class="method-badge">GET</span></td><td class="ref-path">/api/translations</td><td>List all translations</td></tr>
+            <tr><td><span class="method-badge">GET</span></td><td class="ref-path">/api/translations/:abbr</td><td>Translation details</td></tr>
+            <tr><td><span class="method-badge">GET</span></td><td class="ref-path">/api/books?translation=</td><td>All 66 books</td></tr>
+            <tr><td><span class="method-badge">GET</span></td><td class="ref-path">/api/books/:id/chapters</td><td>Chapters & verse counts</td></tr>
+            <tr><td><span class="method-badge">GET</span></td><td class="ref-path">/api/verses/:t/:b/:c</td><td>All verses in a chapter</td></tr>
+            <tr><td><span class="method-badge">GET</span></td><td class="ref-path">/api/verses/:t/:b/:c/:v</td><td>Single verse</td></tr>
+            <tr><td><span class="method-badge">GET</span></td><td class="ref-path">/api/votd</td><td>Verse of the Day</td></tr>
+            <tr><td><span class="method-badge">GET</span></td><td class="ref-path">/api/search?q=&translation=</td><td>Full-text search</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
 
   <script>
-    async function loadData() {
+    const pages = ['overview', 'traffic', 'logs', 'costs', 'endpoints'];
+    const titles = { overview: 'Overview', traffic: 'Traffic', logs: 'Logs', costs: 'Costs & System', endpoints: 'API Reference' };
+
+    function switchPage(page) {
+      pages.forEach(p => {
+        document.getElementById('page-' + p).classList.toggle('active', p === page);
+      });
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.toggle('active', item.getAttribute('onclick')?.includes(page));
+      });
+      document.getElementById('pageTitle').textContent = titles[page] || page;
+    }
+
+    // --- Render hourly chart with stacked bars ---
+    function renderChart(containerId, hourly) {
+      if (!hourly || hourly.length === 0) {
+        document.getElementById(containerId).innerHTML = '<div class="chart-empty">No data yet</div>';
+        return;
+      }
+      const max = Math.max(...hourly.map(h => h.total), 1);
+      const bars = hourly.map(h => {
+        const totalPct = Math.max((h.total / max) * 100, 2);
+        const clientPct = h.total > 0 ? (h.client / h.total) * totalPct : 0;
+        const internalPct = h.total > 0 ? (h.internal / h.total) * totalPct : 0;
+        const errorPct = h.total > 0 ? (h.errors / h.total) * totalPct : 0;
+        const label = h.hour.slice(11) + 'h';
+        return '<div class="chart-bar-wrap">' +
+          '<div class="chart-bar-count">' + h.total + '</div>' +
+          '<div class="chart-bar-stack" style="height:' + totalPct + '%">' +
+            (errorPct > 0 ? '<div class="chart-bar-error" style="height:' + errorPct + '%"></div>' : '') +
+            '<div class="chart-bar-client" style="height:' + clientPct + '%"></div>' +
+            '<div class="chart-bar-internal" style="height:' + internalPct + '%"></div>' +
+          '</div>' +
+          '<div class="chart-bar-label">' + label + '</div></div>';
+      }).join('');
+      const legend = '<div class="chart-legend">' +
+        '<div class="chart-legend-item"><div class="chart-legend-dot" style="background:#3b82f6"></div>Client</div>' +
+        '<div class="chart-legend-item"><div class="chart-legend-dot" style="background:#475569"></div>Internal</div>' +
+        '<div class="chart-legend-item"><div class="chart-legend-dot" style="background:#ef4444"></div>Errors</div>' +
+        '</div>';
+      document.getElementById(containerId).innerHTML = '<div class="chart">' + bars + '</div>' + legend;
+    }
+
+    // --- Render top endpoints ---
+    function renderTopEndpoints(containerId, endpoints, simple) {
+      if (!endpoints || endpoints.length === 0) {
+        document.getElementById(containerId).innerHTML = '<div class="chart-empty">No data yet</div>';
+        return;
+      }
+      if (simple) {
+        document.getElementById(containerId).innerHTML = endpoints.map(e => {
+          const maxTotal = endpoints[0].total;
+          const clientW = maxTotal > 0 ? (e.client / maxTotal) * 100 : 0;
+          const internalW = maxTotal > 0 ? (e.internal / maxTotal) * 100 : 0;
+          return '<div style="padding:6px 0;border-bottom:1px solid #1e293b;">' +
+            '<div style="display:flex;justify-content:space-between;margin-bottom:4px;">' +
+              '<span class="ep-name">' + e.endpoint + '</span>' +
+              '<span style="font-size:12px;font-weight:600;">' + e.total + '</span>' +
+            '</div>' +
+            '<div class="ep-bar">' +
+              '<div class="ep-bar-client" style="width:' + clientW + '%"></div>' +
+              '<div class="ep-bar-internal" style="width:' + internalW + '%"></div>' +
+            '</div></div>';
+        }).join('');
+        return;
+      }
+      // Full table
+      const tbody = endpoints.map(e => {
+        const maxTotal = endpoints[0].total;
+        const clientW = maxTotal > 0 ? (e.client / maxTotal) * 100 : 0;
+        const internalW = maxTotal > 0 ? (e.internal / maxTotal) * 100 : 0;
+        return '<tr><td class="ep-name">' + e.endpoint + '</td>' +
+          '<td style="color:#3b82f6">' + e.client + '</td>' +
+          '<td style="color:#64748b">' + e.internal + '</td>' +
+          '<td style="font-weight:600">' + e.total + '</td>' +
+          '<td><div class="ep-bar"><div class="ep-bar-client" style="width:' + clientW + '%"></div><div class="ep-bar-internal" style="width:' + internalW + '%"></div></div></td></tr>';
+      }).join('');
+      document.getElementById(containerId).querySelector('tbody').innerHTML = tbody;
+    }
+
+    // --- Load status ---
+    async function loadStatus() {
       try {
         const res = await fetch('/api/status');
         const d = await res.json();
@@ -242,6 +452,7 @@
         document.getElementById('apiStatus').textContent = d.api.status.toUpperCase();
         document.getElementById('apiDot').className = 'status-dot ' + (d.api.status === 'ok' ? 'status-ok' : 'status-error');
         document.getElementById('apiUptime').textContent = 'Uptime: ' + d.api.uptime;
+        document.getElementById('uptimeCard').textContent = d.api.uptime;
 
         document.getElementById('dbStatus').textContent = d.database.status.toUpperCase();
         document.getElementById('dbDot').className = 'status-dot ' + (d.database.status === 'ok' ? 'status-ok' : 'status-error');
@@ -255,16 +466,22 @@
         document.getElementById('nodeVersion').textContent = d.system.node_version;
         document.getElementById('env').textContent = d.system.env;
 
-        // Costs
         if (d.costs) {
           const s = d.costs.supabase;
           const f = d.costs.flyio;
 
+          // Costs page
           document.getElementById('dbSize').textContent = s.db_size;
           document.getElementById('dbLimit').textContent = s.db_usage_percent + '% of ' + s.db_limit + ' free tier';
           document.getElementById('dbProgress').style.width = s.db_usage_percent + '%';
           document.getElementById('dbProgress').className = 'progress-fill ' + (s.db_usage_percent >= 80 ? 'progress-danger' : s.db_usage_percent >= 50 ? 'progress-warn' : 'progress-ok');
           document.getElementById('supabaseTier').textContent = s.tier;
+
+          // Overview DB summary
+          document.getElementById('dbSizeOverview').textContent = s.db_size;
+          document.getElementById('dbLimitOverview').textContent = s.db_usage_percent + '% of ' + s.db_limit;
+          document.getElementById('dbProgressOverview').style.width = s.db_usage_percent + '%';
+          document.getElementById('dbProgressOverview').className = 'progress-fill ' + (s.db_usage_percent >= 80 ? 'progress-danger' : s.db_usage_percent >= 50 ? 'progress-warn' : 'progress-ok');
 
           document.getElementById('flyEstimate').textContent = f.estimate;
           document.getElementById('flyVm').textContent = f.vm;
@@ -272,10 +489,9 @@
           document.getElementById('flyMinMachines').textContent = f.min_machines;
           document.getElementById('flyTier').textContent = f.tier;
 
-          // Warning banner
           if (s.warning) {
             document.getElementById('warningBanner').style.display = 'block';
-            document.getElementById('warningTitle').textContent = 'Canh bao chi phi';
+            document.getElementById('warningTitle').textContent = 'Cost Warning';
             document.getElementById('warningText').textContent = s.warning;
           } else {
             document.getElementById('warningBanner').style.display = 'none';
@@ -290,60 +506,55 @@
       }
     }
 
+    // --- Load metrics ---
     async function loadMetrics() {
       try {
         const res = await fetch('/api/metrics');
         const m = await res.json();
 
-        // Totals
-        document.getElementById('totalRequests').textContent = m.totals.requests.toLocaleString();
-        document.getElementById('totalErrors').textContent = m.totals.errors + ' errors';
+        // Overview stats
+        document.getElementById('clientRequests').textContent = m.totals.client.toLocaleString();
+        document.getElementById('clientRequestsDetail').textContent = m.totals.total.toLocaleString() + ' total (' + m.totals.internal + ' internal)';
+        document.getElementById('totalErrors').textContent = m.totals.errors;
 
-        // Avg response from hourly
-        if (m.hourly.length > 0) {
-          const totalMs = m.hourly.reduce((s, h) => s + h.avg_ms * h.count, 0);
-          const totalCount = m.hourly.reduce((s, h) => s + h.count, 0);
-          const avg = totalCount > 0 ? Math.round(totalMs / totalCount) : 0;
-          document.getElementById('avgResponse').textContent = avg + 'ms';
-        }
+        // Traffic page stats
+        document.getElementById('trafficTotal').textContent = m.totals.total.toLocaleString();
+        document.getElementById('trafficClient').textContent = m.totals.client.toLocaleString();
+        document.getElementById('trafficInternal').textContent = m.totals.internal.toLocaleString();
+        document.getElementById('trafficErrors').textContent = m.totals.errors;
 
-        // Hourly chart
-        if (m.hourly.length > 0) {
-          const max = Math.max(...m.hourly.map(h => h.count), 1);
-          const bars = m.hourly.map(h => {
-            const pct = Math.max((h.count / max) * 100, 2);
-            const label = h.hour.slice(11) + 'h';
-            const cls = h.errors > 0 ? ' has-errors' : '';
-            return '<div class="chart-bar-wrap">' +
-              '<div class="chart-bar-count">' + h.count + '</div>' +
-              '<div class="chart-bar' + cls + '" style="height:' + pct + '%"></div>' +
-              '<div class="chart-bar-label">' + label + '</div></div>';
-          }).join('');
-          document.getElementById('hourlyChart').innerHTML = '<div class="chart">' + bars + '</div>';
-        }
+        // Charts
+        renderChart('overviewChart', m.hourly);
+        renderChart('trafficChart', m.hourly);
 
         // Top endpoints
-        if (m.top_endpoints.length > 0) {
-          document.getElementById('topEndpoints').innerHTML = m.top_endpoints.map(e =>
-            '<div class="top-ep"><span class="top-ep-name">' + e.endpoint + '</span><span class="top-ep-count">' + e.count + '</span></div>'
-          ).join('');
-        }
+        renderTopEndpoints('overviewTopEndpoints', m.top_endpoints, true);
+        renderTopEndpoints('trafficEndpoints', m.top_endpoints, false);
 
-        // Recent logs
+        // Logs
         if (m.recent_logs.length > 0) {
           document.getElementById('logBody').innerHTML = m.recent_logs.map(l => {
             const time = new Date(l.time).toLocaleTimeString();
-            const cls = l.status < 300 ? 'log-2xx' : l.status < 400 ? 'log-3xx' : l.status < 500 ? 'log-4xx' : 'log-5xx';
-            return '<tr><td>' + time + '</td><td>' + l.method + '</td><td>' + l.path + '</td>' +
-              '<td><span class="log-status ' + cls + '">' + l.status + '</span></td><td>' + l.duration + 'ms</td></tr>';
+            const statusCls = l.status < 300 ? 'log-2xx' : l.status < 400 ? 'log-3xx' : l.status < 500 ? 'log-4xx' : 'log-5xx';
+            const sourceCls = l.source === 'client' ? 'source-client' : 'source-internal';
+            const sourceLabel = l.source === 'client' ? 'CLIENT' : 'INTERNAL';
+            return '<tr><td>' + time + '</td>' +
+              '<td><span class="source-badge ' + sourceCls + '">' + sourceLabel + '</span></td>' +
+              '<td>' + l.method + '</td><td>' + l.path + '</td>' +
+              '<td><span class="log-status ' + statusCls + '">' + l.status + '</span></td>' +
+              '<td>' + l.duration + 'ms</td></tr>';
           }).join('');
         }
       } catch (e) { /* ignore */ }
     }
 
-    loadData();
-    loadMetrics();
-    setInterval(() => { loadData(); loadMetrics(); }, 30000);
+    function loadAll() {
+      loadStatus();
+      loadMetrics();
+    }
+
+    loadAll();
+    setInterval(loadAll, 30000);
   </script>
 </body>
 </html>
