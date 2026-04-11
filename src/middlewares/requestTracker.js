@@ -25,6 +25,27 @@ function getHourKey() {
   return new Date().toISOString().slice(0, 13);
 }
 
+function createBucket(hourKey) {
+  return {
+    hour: hourKey,
+    client: 0,
+    internal: 0,
+    errors: 0,
+    errors_4xx: 0,
+    errors_5xx: 0,
+    durations: [],        // raw durations for percentile calculation
+    _total_ms: 0,
+    _count: 0,
+    db_ok: true,          // health tracking
+  };
+}
+
+function percentile(sorted, p) {
+  if (sorted.length === 0) return 0;
+  const i = Math.ceil((p / 100) * sorted.length) - 1;
+  return sorted[Math.max(0, i)];
+}
+
 function requestTracker(req, res, next) {
   if (req.path === '/favicon.ico') return next();
 
@@ -57,15 +78,28 @@ function requestTracker(req, res, next) {
     const hourKey = getHourKey();
     let bucket = state.hourly.find(h => h.hour === hourKey);
     if (!bucket) {
-      bucket = { hour: hourKey, client: 0, internal: 0, errors: 0, avg_ms: 0, _total_ms: 0, _count: 0 };
+      bucket = createBucket(hourKey);
       state.hourly.push(bucket);
       if (state.hourly.length > MAX_HOURLY) state.hourly.shift();
     }
     bucket[source]++;
     bucket._count++;
-    if (res.statusCode >= 400) bucket.errors++;
     bucket._total_ms += duration;
-    bucket.avg_ms = Math.round(bucket._total_ms / bucket._count);
+
+    // Track durations for percentiles (cap at 500 per hour to limit memory)
+    if (bucket.durations.length < 500) {
+      bucket.durations.push(duration);
+    }
+
+    // Error breakdown
+    if (res.statusCode >= 400 && res.statusCode < 500) bucket.errors_4xx++;
+    if (res.statusCode >= 500) bucket.errors_5xx++;
+    if (res.statusCode >= 400) bucket.errors++;
+
+    // Health: mark degraded if any 5xx or very slow response
+    if (res.statusCode >= 500 || duration > 5000) {
+      bucket.db_ok = false;
+    }
 
     originalEnd.apply(res, args);
   };
@@ -79,16 +113,38 @@ function getMetrics() {
     .sort((a, b) => b.total - a.total)
     .slice(0, 10);
 
-  return {
-    totals: { ...state.totals, total: state.totals.client + state.totals.internal, uptime: Date.now() - state.startTime },
-    hourly: state.hourly.map(h => ({
+  const hourly = state.hourly.map(h => {
+    const sorted = [...h.durations].sort((a, b) => a - b);
+    const total = h.client + h.internal;
+    return {
       hour: h.hour,
       client: h.client,
       internal: h.internal,
-      total: h.client + h.internal,
+      total,
       errors: h.errors,
-      avg_ms: h.avg_ms,
-    })),
+      errors_4xx: h.errors_4xx,
+      errors_5xx: h.errors_5xx,
+      avg_ms: h._count > 0 ? Math.round(h._total_ms / h._count) : 0,
+      p50: percentile(sorted, 50),
+      p95: percentile(sorted, 95),
+      p99: percentile(sorted, 99),
+    };
+  });
+
+  // Health timeline: one status per hour
+  const health = state.hourly.map(h => {
+    const total = h.client + h.internal;
+    const avgMs = h._count > 0 ? Math.round(h._total_ms / h._count) : 0;
+    let status = 'ok';
+    if (h.errors_5xx > 0 && total > 0 && (h.errors_5xx / total) > 0.5) status = 'down';
+    else if (h.errors_5xx > 0 || avgMs > 3000) status = 'degraded';
+    return { hour: h.hour, status, avg_ms: avgMs };
+  });
+
+  return {
+    totals: { ...state.totals, total: state.totals.client + state.totals.internal, uptime: Date.now() - state.startTime },
+    hourly,
+    health,
     top_endpoints: topEndpoints,
     recent_logs: state.logs.slice(0, 50),
   };

@@ -38,6 +38,9 @@ app.use(pinoHttp({ logger }));
 // Body parsing
 app.use(express.json({ limit: '1mb' }));
 
+// Static files
+app.use('/static', express.static(path.join(__dirname, 'public')));
+
 // Request tracking
 app.use(requestTracker);
 
@@ -60,15 +63,25 @@ app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date() });
 });
 
-// Nonce-based CSP for pages with inline scripts
-function serveWithNonce(filePath, injectMetricsKey) {
+// Nonce-based CSP for pages with inline scripts (demo)
+function serveWithNonce(filePath) {
   return (req, res) => {
     const nonce = crypto.randomBytes(16).toString('base64');
     res.setHeader('Content-Security-Policy',
       `default-src 'self'; script-src 'nonce-${nonce}'; style-src 'self' 'unsafe-inline'; connect-src 'self'`);
-    let html = fs.readFileSync(filePath, 'utf-8')
+    const html = fs.readFileSync(filePath, 'utf-8')
       .replace(/<script>/g, `<script nonce="${nonce}">`);
-    if (injectMetricsKey && process.env.METRICS_KEY) {
+    res.type('html').send(html);
+  };
+}
+
+// CSP for dashboard (external scripts from CDN + static)
+function serveDashboard(filePath) {
+  return (req, res) => {
+    res.setHeader('Content-Security-Policy',
+      `default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; connect-src 'self'`);
+    let html = fs.readFileSync(filePath, 'utf-8');
+    if (process.env.METRICS_KEY) {
       html = html.replace('</head>', `<meta name="metrics-key" content="${process.env.METRICS_KEY}">\n</head>`);
     }
     res.type('html').send(html);
@@ -79,7 +92,7 @@ function serveWithNonce(filePath, injectMetricsKey) {
 app.get('/demo', serveWithNonce(path.join(__dirname, 'views', 'demo.html')));
 
 // Dashboard
-app.get('/dashboard', serveWithNonce(path.join(__dirname, 'views', 'dashboard.html'), true));
+app.get('/dashboard', serveDashboard(path.join(__dirname, 'views', 'dashboard.html')));
 
 // API routes
 app.use('/api', apiRoutes);
