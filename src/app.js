@@ -1,4 +1,6 @@
 const express = require('express');
+const crypto = require('crypto');
+const fs = require('fs');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
@@ -16,12 +18,15 @@ const app = express();
 
 // Security middlewares
 app.use(helmet());
-app.use(cors());
+app.use(cors({
+  origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : '*',
+  methods: ['GET'],
+}));
 
 // Rate limiting
 app.use(rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 500,                  // 100 requests per IP per window
+  max: 500,                  // 500 requests per IP per window
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many requests, please try again later.' },
@@ -31,7 +36,7 @@ app.use(rateLimit({
 app.use(pinoHttp({ logger }));
 
 // Body parsing
-app.use(express.json());
+app.use(express.json({ limit: '1mb' }));
 
 // Request tracking
 app.use(requestTracker);
@@ -55,26 +60,26 @@ app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date() });
 });
 
-// Shared CSP for pages with inline scripts
-const pageCsp = helmet.contentSecurityPolicy({
-  directives: {
-    defaultSrc: ["'self'"],
-    scriptSrc: ["'self'", "'unsafe-inline'"],
-    scriptSrcAttr: ["'unsafe-inline'"],
-    styleSrc: ["'self'", "'unsafe-inline'"],
-    connectSrc: ["'self'"],
-  },
-});
+// Nonce-based CSP for pages with inline scripts
+function serveWithNonce(filePath, injectMetricsKey) {
+  return (req, res) => {
+    const nonce = crypto.randomBytes(16).toString('base64');
+    res.setHeader('Content-Security-Policy',
+      `default-src 'self'; script-src 'nonce-${nonce}'; style-src 'self' 'unsafe-inline'; connect-src 'self'`);
+    let html = fs.readFileSync(filePath, 'utf-8')
+      .replace(/<script>/g, `<script nonce="${nonce}">`);
+    if (injectMetricsKey && process.env.METRICS_KEY) {
+      html = html.replace('</head>', `<meta name="metrics-key" content="${process.env.METRICS_KEY}">\n</head>`);
+    }
+    res.type('html').send(html);
+  };
+}
 
 // Demo app
-app.get('/demo', pageCsp, (req, res) => {
-  res.sendFile(path.join(__dirname, 'views', 'demo.html'));
-});
+app.get('/demo', serveWithNonce(path.join(__dirname, 'views', 'demo.html')));
 
 // Dashboard
-app.get('/dashboard', pageCsp, (req, res) => {
-  res.sendFile(path.join(__dirname, 'views', 'dashboard.html'));
-});
+app.get('/dashboard', serveWithNonce(path.join(__dirname, 'views', 'dashboard.html'), true));
 
 // API routes
 app.use('/api', apiRoutes);

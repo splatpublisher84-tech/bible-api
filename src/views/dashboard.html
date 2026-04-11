@@ -153,20 +153,20 @@
       <p>Dashboard</p>
     </div>
     <div class="nav-section">Monitor</div>
-    <div class="nav-item active" onclick="switchPage('overview')">
+    <div class="nav-item active" data-page="overview">
       <span class="nav-icon">&#9632;</span><span>Overview</span>
     </div>
-    <div class="nav-item" onclick="switchPage('traffic')">
+    <div class="nav-item" data-page="traffic">
       <span class="nav-icon">&#9650;</span><span>Traffic</span>
     </div>
-    <div class="nav-item" onclick="switchPage('logs')">
+    <div class="nav-item" data-page="logs">
       <span class="nav-icon">&#9776;</span><span>Logs</span>
     </div>
     <div class="nav-section">Info</div>
-    <div class="nav-item" onclick="switchPage('costs')">
+    <div class="nav-item" data-page="costs">
       <span class="nav-icon">&#36;</span><span>Costs</span>
     </div>
-    <div class="nav-item" onclick="switchPage('endpoints')">
+    <div class="nav-item" data-page="endpoints">
       <span class="nav-icon">&#10095;</span><span>API Reference</span>
     </div>
     <div class="sidebar-footer">
@@ -182,7 +182,7 @@
       <div class="page-title" id="pageTitle">Overview</div>
       <div class="header-actions">
         <span class="last-update" id="lastUpdate">Loading...</span>
-        <button class="refresh-btn" onclick="loadAll()">Refresh</button>
+        <button class="refresh-btn" id="refreshBtn">Refresh</button>
       </div>
     </div>
 
@@ -363,6 +363,15 @@
   </div>
 
   <script>
+    // --- HTML escaping to prevent XSS ---
+    function esc(str) {
+      const d = document.createElement('div');
+      d.textContent = String(str);
+      return d.innerHTML;
+    }
+
+    const metricsKey = document.querySelector('meta[name="metrics-key"]')?.content;
+    const metricsUrl = '/api/metrics' + (metricsKey ? '?key=' + encodeURIComponent(metricsKey) : '');
     const pages = ['overview', 'traffic', 'logs', 'costs', 'endpoints'];
     const titles = { overview: 'Overview', traffic: 'Traffic', logs: 'Logs', costs: 'Costs & System', endpoints: 'API Reference' };
 
@@ -370,11 +379,17 @@
       pages.forEach(p => {
         document.getElementById('page-' + p).classList.toggle('active', p === page);
       });
-      document.querySelectorAll('.nav-item').forEach(item => {
-        item.classList.toggle('active', item.getAttribute('onclick')?.includes(page));
+      document.querySelectorAll('.nav-item[data-page]').forEach(item => {
+        item.classList.toggle('active', item.dataset.page === page);
       });
       document.getElementById('pageTitle').textContent = titles[page] || page;
     }
+
+    // Event listeners for nav + refresh
+    document.querySelectorAll('.nav-item[data-page]').forEach(item => {
+      item.addEventListener('click', () => switchPage(item.dataset.page));
+    });
+    document.getElementById('refreshBtn').addEventListener('click', loadAll);
 
     // --- Render hourly chart with stacked bars ---
     function renderChart(containerId, hourly) {
@@ -388,7 +403,7 @@
         const clientPct = h.total > 0 ? (h.client / h.total) * totalPct : 0;
         const internalPct = h.total > 0 ? (h.internal / h.total) * totalPct : 0;
         const errorPct = h.total > 0 ? (h.errors / h.total) * totalPct : 0;
-        const label = h.hour.slice(11) + 'h';
+        const label = esc(h.hour.slice(11) + 'h');
         return '<div class="chart-bar-wrap">' +
           '<div class="chart-bar-count">' + h.total + '</div>' +
           '<div class="chart-bar-stack" style="height:' + totalPct + '%">' +
@@ -419,7 +434,7 @@
           const internalW = maxTotal > 0 ? (e.internal / maxTotal) * 100 : 0;
           return '<div style="padding:6px 0;border-bottom:1px solid #1e293b;">' +
             '<div style="display:flex;justify-content:space-between;margin-bottom:4px;">' +
-              '<span class="ep-name">' + e.endpoint + '</span>' +
+              '<span class="ep-name">' + esc(e.endpoint) + '</span>' +
               '<span style="font-size:12px;font-weight:600;">' + e.total + '</span>' +
             '</div>' +
             '<div class="ep-bar">' +
@@ -429,12 +444,11 @@
         }).join('');
         return;
       }
-      // Full table
       const tbody = endpoints.map(e => {
         const maxTotal = endpoints[0].total;
         const clientW = maxTotal > 0 ? (e.client / maxTotal) * 100 : 0;
         const internalW = maxTotal > 0 ? (e.internal / maxTotal) * 100 : 0;
-        return '<tr><td class="ep-name">' + e.endpoint + '</td>' +
+        return '<tr><td class="ep-name">' + esc(e.endpoint) + '</td>' +
           '<td style="color:#3b82f6">' + e.client + '</td>' +
           '<td style="color:#64748b">' + e.internal + '</td>' +
           '<td style="font-weight:600">' + e.total + '</td>' +
@@ -470,14 +484,12 @@
           const s = d.costs.supabase;
           const f = d.costs.flyio;
 
-          // Costs page
           document.getElementById('dbSize').textContent = s.db_size;
           document.getElementById('dbLimit').textContent = s.db_usage_percent + '% of ' + s.db_limit + ' free tier';
           document.getElementById('dbProgress').style.width = s.db_usage_percent + '%';
           document.getElementById('dbProgress').className = 'progress-fill ' + (s.db_usage_percent >= 80 ? 'progress-danger' : s.db_usage_percent >= 50 ? 'progress-warn' : 'progress-ok');
           document.getElementById('supabaseTier').textContent = s.tier;
 
-          // Overview DB summary
           document.getElementById('dbSizeOverview').textContent = s.db_size;
           document.getElementById('dbLimitOverview').textContent = s.db_usage_percent + '% of ' + s.db_limit;
           document.getElementById('dbProgressOverview').style.width = s.db_usage_percent + '%';
@@ -509,38 +521,33 @@
     // --- Load metrics ---
     async function loadMetrics() {
       try {
-        const res = await fetch('/api/metrics');
+        const res = await fetch(metricsUrl);
         const m = await res.json();
 
-        // Overview stats
         document.getElementById('clientRequests').textContent = m.totals.client.toLocaleString();
         document.getElementById('clientRequestsDetail').textContent = m.totals.total.toLocaleString() + ' total (' + m.totals.internal + ' internal)';
         document.getElementById('totalErrors').textContent = m.totals.errors;
 
-        // Traffic page stats
         document.getElementById('trafficTotal').textContent = m.totals.total.toLocaleString();
         document.getElementById('trafficClient').textContent = m.totals.client.toLocaleString();
         document.getElementById('trafficInternal').textContent = m.totals.internal.toLocaleString();
         document.getElementById('trafficErrors').textContent = m.totals.errors;
 
-        // Charts
         renderChart('overviewChart', m.hourly);
         renderChart('trafficChart', m.hourly);
 
-        // Top endpoints
         renderTopEndpoints('overviewTopEndpoints', m.top_endpoints, true);
         renderTopEndpoints('trafficEndpoints', m.top_endpoints, false);
 
-        // Logs
         if (m.recent_logs.length > 0) {
           document.getElementById('logBody').innerHTML = m.recent_logs.map(l => {
             const time = new Date(l.time).toLocaleTimeString();
             const statusCls = l.status < 300 ? 'log-2xx' : l.status < 400 ? 'log-3xx' : l.status < 500 ? 'log-4xx' : 'log-5xx';
             const sourceCls = l.source === 'client' ? 'source-client' : 'source-internal';
             const sourceLabel = l.source === 'client' ? 'CLIENT' : 'INTERNAL';
-            return '<tr><td>' + time + '</td>' +
+            return '<tr><td>' + esc(time) + '</td>' +
               '<td><span class="source-badge ' + sourceCls + '">' + sourceLabel + '</span></td>' +
-              '<td>' + l.method + '</td><td>' + l.path + '</td>' +
+              '<td>' + esc(l.method) + '</td><td>' + esc(l.path) + '</td>' +
               '<td><span class="log-status ' + statusCls + '">' + l.status + '</span></td>' +
               '<td>' + l.duration + 'ms</td></tr>';
           }).join('');

@@ -7,8 +7,9 @@ const pool = new Pool({
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
+  statement_timeout: 10000,
   ...(process.env.NODE_ENV === 'production' && {
-    ssl: { rejectUnauthorized: false },
+    ssl: { rejectUnauthorized: true },
   }),
 });
 

@@ -84,19 +84,19 @@
     </div>
 
     <div class="tabs">
-      <div class="tab active" onclick="switchTab('read')">Doc Kinh Thanh</div>
-      <div class="tab" onclick="switchTab('search')">Tim kiem</div>
-      <div class="tab" onclick="switchTab('votd')">Cau Goc</div>
+      <div class="tab active" data-tab="read">Doc Kinh Thanh</div>
+      <div class="tab" data-tab="search">Tim kiem</div>
+      <div class="tab" data-tab="votd">Cau Goc</div>
     </div>
 
     <!-- READ SECTION -->
     <div class="section active" id="sec-read">
       <div class="selectors">
-        <select class="sel-translation" id="readTranslation" onchange="loadBooks()"></select>
-        <select class="sel-book" id="readBook" onchange="loadChapters()">
+        <select class="sel-translation" id="readTranslation"></select>
+        <select class="sel-book" id="readBook">
           <option>-- Chon sach --</option>
         </select>
-        <select class="sel-chapter" id="readChapter" onchange="loadVerses()">
+        <select class="sel-chapter" id="readChapter">
           <option>--</option>
         </select>
       </div>
@@ -105,8 +105,8 @@
         <div class="empty">Chon sach va chuong de bat dau doc</div>
       </div>
       <div class="chapter-nav" id="chapterNav" style="display:none;">
-        <button class="nav-btn" id="prevChapter" onclick="changeChapter(-1)">Chuong truoc</button>
-        <button class="nav-btn" id="nextChapter" onclick="changeChapter(1)">Chuong sau</button>
+        <button class="nav-btn" id="prevChapter">Chuong truoc</button>
+        <button class="nav-btn" id="nextChapter">Chuong sau</button>
       </div>
     </div>
 
@@ -116,8 +116,8 @@
         <select class="sel-translation" id="searchTranslation" style="flex:1;"></select>
       </div>
       <div class="search-bar">
-        <input class="search-input" id="searchInput" placeholder="Nhap tu khoa..." onkeydown="if(event.key==='Enter')doSearch()">
-        <button class="search-btn" onclick="doSearch()">Tim</button>
+        <input class="search-input" id="searchInput" placeholder="Nhap tu khoa...">
+        <button class="search-btn" id="searchBtn">Tim</button>
       </div>
       <div id="searchInfo" class="search-info"></div>
       <div id="searchResults"></div>
@@ -126,13 +126,20 @@
     <!-- VOTD SECTION -->
     <div class="section" id="sec-votd">
       <div class="selectors" style="margin-bottom:16px;">
-        <select class="sel-translation" id="votdTranslation" onchange="loadVotd()" style="flex:1;"></select>
+        <select class="sel-translation" id="votdTranslation" style="flex:1;"></select>
       </div>
       <div id="votdCard"></div>
     </div>
   </div>
 
   <script>
+    // --- HTML escaping to prevent XSS ---
+    function esc(str) {
+      const d = document.createElement('div');
+      d.textContent = String(str);
+      return d.innerHTML;
+    }
+
     const API = '/api';
     let booksData = [];
     let chaptersData = [];
@@ -147,7 +154,7 @@
       const { data } = await res.json();
       ['readTranslation', 'searchTranslation', 'votdTranslation'].forEach(id => {
         const sel = document.getElementById(id);
-        sel.innerHTML = data.map(t => '<option value="'+t.abbr+'">'+t.name+'</option>').join('');
+        sel.innerHTML = data.map(t => '<option value="' + esc(t.abbr) + '">' + esc(t.name) + '</option>').join('');
       });
       loadBooks();
       loadVotd();
@@ -155,10 +162,8 @@
 
     // --- Tab switching ---
     function switchTab(tab) {
-      document.querySelectorAll('.tab').forEach((t, i) => {
-        t.classList.toggle('active', t.textContent.toLowerCase().includes(
-          tab === 'read' ? 'doc' : tab === 'search' ? 'tim' : 'cau'
-        ));
+      document.querySelectorAll('.tab[data-tab]').forEach(t => {
+        t.classList.toggle('active', t.dataset.tab === tab);
       });
       document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
       document.getElementById('sec-' + tab).classList.add('active');
@@ -167,12 +172,12 @@
     // --- Read ---
     async function loadBooks() {
       const t = document.getElementById('readTranslation').value;
-      const res = await fetch(API + '/books?translation=' + t);
+      const res = await fetch(API + '/books?translation=' + encodeURIComponent(t));
       const { data } = await res.json();
       booksData = data;
       const sel = document.getElementById('readBook');
       sel.innerHTML = '<option value="">-- Chon sach --</option>' +
-        data.map(b => '<option value="'+b.id+'">'+b.name+'</option>').join('');
+        data.map(b => '<option value="' + esc(b.id) + '">' + esc(b.name) + '</option>').join('');
       document.getElementById('readChapter').innerHTML = '<option>--</option>';
       document.getElementById('versesContainer').innerHTML = '<div class="empty">Chon sach va chuong de bat dau doc</div>';
       document.getElementById('chapterNav').style.display = 'none';
@@ -184,11 +189,11 @@
       if (!bookId) return;
       currentBookId = parseInt(bookId);
       const t = document.getElementById('readTranslation').value;
-      const res = await fetch(API + '/books/' + bookId + '/chapters?translation=' + t);
+      const res = await fetch(API + '/books/' + encodeURIComponent(bookId) + '/chapters?translation=' + encodeURIComponent(t));
       const { data } = await res.json();
       chaptersData = data;
       const sel = document.getElementById('readChapter');
-      sel.innerHTML = data.map(c => '<option value="'+c.chapter+'">Chuong '+c.chapter+'</option>').join('');
+      sel.innerHTML = data.map(c => '<option value="' + c.chapter + '">Chuong ' + c.chapter + '</option>').join('');
       currentChapter = 1;
       loadVerses();
     }
@@ -202,14 +207,14 @@
 
       document.getElementById('versesContainer').innerHTML = '<div class="loading">Dang tai...</div>';
 
-      const res = await fetch(API + '/verses/' + t + '/' + b + '/' + c);
+      const res = await fetch(API + '/verses/' + encodeURIComponent(t) + '/' + encodeURIComponent(b) + '/' + encodeURIComponent(c));
       const { data } = await res.json();
 
       const bookName = booksData.find(bk => bk.id == b)?.name || '';
       document.getElementById('chapterTitle').textContent = bookName + ' - Chuong ' + c;
 
       document.getElementById('versesContainer').innerHTML = data.map(v =>
-        '<div class="verse-item"><span class="verse-num">' + v.verse + '</span><span class="verse-text">' + cleanText(v.text) + '</span></div>'
+        '<div class="verse-item"><span class="verse-num">' + v.verse + '</span><span class="verse-text">' + esc(cleanText(v.text)) + '</span></div>'
       ).join('');
 
       document.getElementById('chapterNav').style.display = 'flex';
@@ -237,7 +242,7 @@
       const t = document.getElementById('searchTranslation').value;
       if (!append) searchOffset = 0;
 
-      const res = await fetch(API + '/search?q=' + encodeURIComponent(q) + '&translation=' + t + '&limit=20&offset=' + searchOffset);
+      const res = await fetch(API + '/search?q=' + encodeURIComponent(q) + '&translation=' + encodeURIComponent(t) + '&limit=20&offset=' + searchOffset);
       const { data, pagination } = await res.json();
       searchTotal = pagination.total;
 
@@ -246,8 +251,8 @@
 
       const html = data.map(r =>
         '<div class="search-result">' +
-          '<div class="search-result-ref">' + r.book_name + ' ' + r.chapter + ':' + r.verse + '</div>' +
-          '<div class="search-result-text">' + cleanText(r.text) + '</div>' +
+          '<div class="search-result-ref">' + esc(r.book_name) + ' ' + r.chapter + ':' + r.verse + '</div>' +
+          '<div class="search-result-text">' + esc(cleanText(r.text)) + '</div>' +
         '</div>'
       ).join('');
 
@@ -261,27 +266,42 @@
 
       searchOffset += 20;
       if (searchOffset < searchTotal) {
-        container.insertAdjacentHTML('beforeend',
-          '<button class="load-more" onclick="doSearch(true)">Xem them (' + (searchTotal - searchOffset) + ' con lai)</button>'
-        );
+        const btn = document.createElement('button');
+        btn.className = 'load-more';
+        btn.textContent = 'Xem them (' + (searchTotal - searchOffset) + ' con lai)';
+        btn.addEventListener('click', () => doSearch(true));
+        container.appendChild(btn);
       }
     }
 
     // --- VOTD ---
     async function loadVotd() {
       const t = document.getElementById('votdTranslation').value;
-      const res = await fetch(API + '/votd?translation=' + t);
+      const res = await fetch(API + '/votd?translation=' + encodeURIComponent(t));
       const { data } = await res.json();
 
       document.getElementById('votdCard').innerHTML =
         '<div class="votd-card">' +
-          '<div class="votd-label">Cau Goc Hom Nay &mdash; ' + data.date + '</div>' +
-          '<div class="votd-text">"' + data.verses.map(v => cleanText(v.text)).join(' ') + '"</div>' +
-          '<div><span class="votd-ref">' + data.display_reference + '</span>' +
-          (data.theme ? '<span class="votd-theme">' + data.theme + '</span>' : '') +
+          '<div class="votd-label">Cau Goc Hom Nay &mdash; ' + esc(data.date) + '</div>' +
+          '<div class="votd-text">"' + esc(data.verses.map(v => cleanText(v.text)).join(' ')) + '"</div>' +
+          '<div><span class="votd-ref">' + esc(data.display_reference) + '</span>' +
+          (data.theme ? '<span class="votd-theme">' + esc(data.theme) + '</span>' : '') +
           '</div>' +
         '</div>';
     }
+
+    // --- Event listeners ---
+    document.querySelectorAll('.tab[data-tab]').forEach(tab => {
+      tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+    });
+    document.getElementById('readTranslation').addEventListener('change', loadBooks);
+    document.getElementById('readBook').addEventListener('change', loadChapters);
+    document.getElementById('readChapter').addEventListener('change', loadVerses);
+    document.getElementById('prevChapter').addEventListener('click', () => changeChapter(-1));
+    document.getElementById('nextChapter').addEventListener('click', () => changeChapter(1));
+    document.getElementById('searchBtn').addEventListener('click', () => doSearch());
+    document.getElementById('searchInput').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+    document.getElementById('votdTranslation').addEventListener('change', loadVotd);
 
     init();
   </script>

@@ -28,7 +28,13 @@ router.get('/votd',
 );
 
 router.get('/status', statusController.getStatus);
-router.get('/metrics', (req, res) => res.json(getMetrics()));
+router.get('/metrics', (req, res) => {
+  const key = process.env.METRICS_KEY;
+  if (key && req.query.key !== key) {
+    return res.status(401).json({ error: 'Invalid or missing metrics key' });
+  }
+  res.json(getMetrics());
+});
 
 router.get('/search',
   cache(300),
