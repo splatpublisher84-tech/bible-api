@@ -9,7 +9,7 @@ const pool = new Pool({
   database: process.env.DB_NAME,
   statement_timeout: 10000,
   ...(process.env.NODE_ENV === 'production' && {
-    ssl: { rejectUnauthorized: true },
+    ssl: { rejectUnauthorized: false },
   }),
 });
 
