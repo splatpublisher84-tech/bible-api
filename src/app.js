@@ -9,6 +9,7 @@ const swaggerSpec = require('./config/swagger');
 const path = require('path');
 const apiRoutes = require('./routes');
 const { errorHandler } = require('./middlewares/errorHandler');
+const { requestTracker } = require('./middlewares/requestTracker');
 require('dotenv').config();
 
 const app = express();
@@ -31,6 +32,9 @@ app.use(pinoHttp({ logger }));
 
 // Body parsing
 app.use(express.json());
+
+// Request tracking
+app.use(requestTracker);
 
 // Swagger API docs
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));

@@ -49,6 +49,30 @@
     .cost-label { font-size: 13px; color: #94a3b8; }
     .cost-value { font-size: 14px; font-weight: 600; }
     .cost-free { color: #22c55e; }
+    /* Chart */
+    .chart { display: flex; align-items: flex-end; gap: 3px; height: 120px; padding: 8px 0; }
+    .chart-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; }
+    .chart-bar { width: 100%; min-width: 8px; border-radius: 3px 3px 0 0; background: #3b82f6; transition: height 0.3s; position: relative; }
+    .chart-bar.has-errors { background: linear-gradient(to top, #ef4444 0%, #3b82f6 30%); }
+    .chart-bar-label { font-size: 9px; color: #64748b; margin-top: 4px; white-space: nowrap; }
+    .chart-bar-count { font-size: 9px; color: #94a3b8; margin-bottom: 2px; }
+    .chart-empty { text-align: center; color: #475569; font-size: 13px; padding: 40px 0; }
+    /* Logs */
+    .log-table { width: 100%; border-collapse: collapse; }
+    .log-table th, .log-table td { text-align: left; padding: 7px 10px; border-bottom: 1px solid #1e293b; font-size: 12px; }
+    .log-table th { color: #64748b; font-weight: 500; font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; position: sticky; top: 0; background: #1e293b; }
+    .log-table td { color: #94a3b8; font-family: 'SF Mono', 'Fira Code', monospace; }
+    .log-status { padding: 1px 6px; border-radius: 3px; font-size: 11px; font-weight: 600; }
+    .log-2xx { background: #14532d; color: #4ade80; }
+    .log-3xx { background: #1e3a5f; color: #60a5fa; }
+    .log-4xx { background: #451a03; color: #fbbf24; }
+    .log-5xx { background: #450a0a; color: #f87171; }
+    .log-scroll { max-height: 300px; overflow-y: auto; }
+    /* Top endpoints */
+    .top-ep { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #1e293b; font-size: 13px; }
+    .top-ep:last-child { border-bottom: none; }
+    .top-ep-name { color: #93c5fd; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; }
+    .top-ep-count { color: #e2e8f0; font-weight: 600; }
     @media (max-width: 600px) { .grid { grid-template-columns: 1fr 1fr; } .card-value { font-size: 22px; } }
   </style>
 </head>
@@ -118,6 +142,44 @@
             <div class="cost-row"><span class="cost-label">Auto-stop</span><span class="cost-value cost-free" id="flyAutoStop">-</span></div>
             <div class="cost-row"><span class="cost-label">Min machines</span><span class="cost-value" id="flyMinMachines">-</span></div>
             <div class="cost-row"><span class="cost-label">Tier</span><span class="cost-value cost-free" id="flyTier">-</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Requests / Gio (24h)</div>
+      <div class="card">
+        <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 0;">
+          <div>
+            <div class="card-label">Total Requests</div>
+            <div class="card-value" id="totalRequests">-</div>
+            <div class="card-detail" id="totalErrors"></div>
+          </div>
+          <div>
+            <div class="card-label">Avg Response</div>
+            <div class="card-value" id="avgResponse">-</div>
+          </div>
+        </div>
+        <div id="hourlyChart" style="margin-top: 16px;"><div class="chart-empty">Chua co du lieu</div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title" style="display:flex;justify-content:space-between;">
+        <span>Top Endpoints</span>
+        <span style="font-size:12px;color:#64748b;font-weight:400;">Recent Logs</span>
+      </div>
+      <div class="grid" style="grid-template-columns: 1fr 1.5fr;">
+        <div class="card" style="padding: 12px 16px;">
+          <div id="topEndpoints"><div class="chart-empty">Chua co du lieu</div></div>
+        </div>
+        <div class="card" style="padding: 0; overflow: hidden;">
+          <div class="log-scroll" id="recentLogs">
+            <table class="log-table">
+              <thead><tr><th>Time</th><th>Method</th><th>Path</th><th>Status</th><th>Duration</th></tr></thead>
+              <tbody id="logBody"><tr><td colspan="5" style="text-align:center;color:#475569;padding:30px;">Chua co du lieu</td></tr></tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -228,8 +290,60 @@
       }
     }
 
+    async function loadMetrics() {
+      try {
+        const res = await fetch('/api/metrics');
+        const m = await res.json();
+
+        // Totals
+        document.getElementById('totalRequests').textContent = m.totals.requests.toLocaleString();
+        document.getElementById('totalErrors').textContent = m.totals.errors + ' errors';
+
+        // Avg response from hourly
+        if (m.hourly.length > 0) {
+          const totalMs = m.hourly.reduce((s, h) => s + h.avg_ms * h.count, 0);
+          const totalCount = m.hourly.reduce((s, h) => s + h.count, 0);
+          const avg = totalCount > 0 ? Math.round(totalMs / totalCount) : 0;
+          document.getElementById('avgResponse').textContent = avg + 'ms';
+        }
+
+        // Hourly chart
+        if (m.hourly.length > 0) {
+          const max = Math.max(...m.hourly.map(h => h.count), 1);
+          const bars = m.hourly.map(h => {
+            const pct = Math.max((h.count / max) * 100, 2);
+            const label = h.hour.slice(11) + 'h';
+            const cls = h.errors > 0 ? ' has-errors' : '';
+            return '<div class="chart-bar-wrap">' +
+              '<div class="chart-bar-count">' + h.count + '</div>' +
+              '<div class="chart-bar' + cls + '" style="height:' + pct + '%"></div>' +
+              '<div class="chart-bar-label">' + label + '</div></div>';
+          }).join('');
+          document.getElementById('hourlyChart').innerHTML = '<div class="chart">' + bars + '</div>';
+        }
+
+        // Top endpoints
+        if (m.top_endpoints.length > 0) {
+          document.getElementById('topEndpoints').innerHTML = m.top_endpoints.map(e =>
+            '<div class="top-ep"><span class="top-ep-name">' + e.endpoint + '</span><span class="top-ep-count">' + e.count + '</span></div>'
+          ).join('');
+        }
+
+        // Recent logs
+        if (m.recent_logs.length > 0) {
+          document.getElementById('logBody').innerHTML = m.recent_logs.map(l => {
+            const time = new Date(l.time).toLocaleTimeString();
+            const cls = l.status < 300 ? 'log-2xx' : l.status < 400 ? 'log-3xx' : l.status < 500 ? 'log-4xx' : 'log-5xx';
+            return '<tr><td>' + time + '</td><td>' + l.method + '</td><td>' + l.path + '</td>' +
+              '<td><span class="log-status ' + cls + '">' + l.status + '</span></td><td>' + l.duration + 'ms</td></tr>';
+          }).join('');
+        }
+      } catch (e) { /* ignore */ }
+    }
+
     loadData();
-    setInterval(loadData, 30000);
+    loadMetrics();
+    setInterval(() => { loadData(); loadMetrics(); }, 30000);
   </script>
 </body>
 </html>

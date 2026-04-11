@@ -8,6 +8,7 @@ const verseRoutes = require('./verse.routes');
 const verseController = require('../controllers/verse.controller');
 const votdController = require('../controllers/votd.controller');
 const statusController = require('../controllers/status.controller');
+const { getMetrics } = require('../middlewares/requestTracker');
 
 const router = Router();
 
@@ -27,6 +28,7 @@ router.get('/votd',
 );
 
 router.get('/status', statusController.getStatus);
+router.get('/metrics', (req, res) => res.json(getMetrics()));
 
 router.get('/search',
   cache(300),
