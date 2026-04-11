@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bible API — Demo</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+    .app { max-width: 720px; margin: 0 auto; padding: 0 16px 80px; }
+
+    /* Header */
+    .header { padding: 20px 0 16px; border-bottom: 1px solid #1e293b; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+    .header h1 { font-size: 18px; font-weight: 600; }
+    .header-links { display: flex; gap: 12px; }
+    .header-links a { color: #60a5fa; text-decoration: none; font-size: 13px; }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 4px; margin-bottom: 20px; background: #1e293b; border-radius: 10px; padding: 4px; }
+    .tab { flex: 1; text-align: center; padding: 10px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500; color: #94a3b8; transition: all 0.2s; }
+    .tab.active { background: #334155; color: #e2e8f0; }
+
+    /* VOTD */
+    .votd-card { background: linear-gradient(135deg, #1e3a5f 0%, #1e293b 100%); border: 1px solid #334155; border-radius: 14px; padding: 24px; margin-bottom: 24px; }
+    .votd-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: #60a5fa; margin-bottom: 12px; }
+    .votd-text { font-size: 18px; line-height: 1.7; font-weight: 400; margin-bottom: 16px; font-style: italic; }
+    .votd-ref { font-size: 14px; color: #93c5fd; font-weight: 600; }
+    .votd-theme { display: inline-block; background: #1d4ed8; color: white; padding: 2px 10px; border-radius: 12px; font-size: 11px; margin-left: 8px; }
+
+    /* Selectors */
+    .selectors { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    select { background: #1e293b; border: 1px solid #334155; color: #e2e8f0; padding: 10px 12px; border-radius: 8px; font-size: 14px; appearance: none; cursor: pointer; min-width: 0; }
+    select:focus { outline: none; border-color: #60a5fa; }
+    .sel-translation { flex: 1; min-width: 120px; }
+    .sel-book { flex: 2; min-width: 140px; }
+    .sel-chapter { flex: 0.7; min-width: 80px; }
+
+    /* Verses */
+    .verses-container { }
+    .verse-item { padding: 8px 0; line-height: 1.8; font-size: 16px; }
+    .verse-num { color: #60a5fa; font-size: 12px; font-weight: 700; vertical-align: super; margin-right: 4px; }
+    .verse-text { color: #cbd5e1; }
+    .chapter-nav { display: flex; justify-content: space-between; margin-top: 24px; }
+    .nav-btn { background: #1e293b; border: 1px solid #334155; color: #e2e8f0; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+    .nav-btn:hover { border-color: #60a5fa; }
+    .nav-btn:disabled { opacity: 0.3; cursor: default; }
+
+    /* Search */
+    .search-bar { display: flex; gap: 8px; margin-bottom: 20px; }
+    .search-input { flex: 1; background: #1e293b; border: 1px solid #334155; color: #e2e8f0; padding: 12px 16px; border-radius: 10px; font-size: 15px; }
+    .search-input:focus { outline: none; border-color: #60a5fa; }
+    .search-btn { background: #1d4ed8; border: none; color: white; padding: 12px 20px; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: 600; }
+    .search-result { padding: 14px 0; border-bottom: 1px solid #1e293b; }
+    .search-result-ref { font-size: 13px; color: #60a5fa; font-weight: 600; margin-bottom: 4px; }
+    .search-result-text { font-size: 15px; color: #cbd5e1; line-height: 1.6; }
+    .search-info { font-size: 13px; color: #64748b; margin-bottom: 16px; }
+    .load-more { display: block; width: 100%; background: #1e293b; border: 1px solid #334155; color: #e2e8f0; padding: 12px; border-radius: 8px; cursor: pointer; font-size: 13px; margin-top: 16px; text-align: center; }
+
+    /* Section */
+    .section { display: none; }
+    .section.active { display: block; }
+
+    /* Loading */
+    .loading { text-align: center; padding: 40px; color: #64748b; }
+    .empty { text-align: center; padding: 40px; color: #64748b; font-size: 14px; }
+
+    /* Chapter title */
+    .chapter-title { font-size: 14px; color: #64748b; margin-bottom: 16px; }
+
+    @media (max-width: 500px) {
+      .selectors { flex-direction: column; }
+      select { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="header">
+      <h1>Bible API Demo</h1>
+      <div class="header-links">
+        <a href="/api-docs" target="_blank">API Docs</a>
+        <a href="/dashboard" target="_blank">Dashboard</a>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('read')">Doc Kinh Thanh</div>
+      <div class="tab" onclick="switchTab('search')">Tim kiem</div>
+      <div class="tab" onclick="switchTab('votd')">Cau Goc</div>
+    </div>
+
+    <!-- READ SECTION -->
+    <div class="section active" id="sec-read">
+      <div class="selectors">
+        <select class="sel-translation" id="readTranslation" onchange="loadBooks()"></select>
+        <select class="sel-book" id="readBook" onchange="loadChapters()">
+          <option>-- Chon sach --</option>
+        </select>
+        <select class="sel-chapter" id="readChapter" onchange="loadVerses()">
+          <option>--</option>
+        </select>
+      </div>
+      <div class="chapter-title" id="chapterTitle"></div>
+      <div class="verses-container" id="versesContainer">
+        <div class="empty">Chon sach va chuong de bat dau doc</div>
+      </div>
+      <div class="chapter-nav" id="chapterNav" style="display:none;">
+        <button class="nav-btn" id="prevChapter" onclick="changeChapter(-1)">Chuong truoc</button>
+        <button class="nav-btn" id="nextChapter" onclick="changeChapter(1)">Chuong sau</button>
+      </div>
+    </div>
+
+    <!-- SEARCH SECTION -->
+    <div class="section" id="sec-search">
+      <div class="selectors" style="margin-bottom:8px;">
+        <select class="sel-translation" id="searchTranslation" style="flex:1;"></select>
+      </div>
+      <div class="search-bar">
+        <input class="search-input" id="searchInput" placeholder="Nhap tu khoa..." onkeydown="if(event.key==='Enter')doSearch()">
+        <button class="search-btn" onclick="doSearch()">Tim</button>
+      </div>
+      <div id="searchInfo" class="search-info"></div>
+      <div id="searchResults"></div>
+    </div>
+
+    <!-- VOTD SECTION -->
+    <div class="section" id="sec-votd">
+      <div class="selectors" style="margin-bottom:16px;">
+        <select class="sel-translation" id="votdTranslation" onchange="loadVotd()" style="flex:1;"></select>
+      </div>
+      <div id="votdCard"></div>
+    </div>
+  </div>
+
+  <script>
+    const API = '/api';
+    let booksData = [];
+    let chaptersData = [];
+    let currentChapter = 1;
+    let currentBookId = null;
+    let searchOffset = 0;
+    let searchTotal = 0;
+
+    // --- Init ---
+    async function init() {
+      const res = await fetch(API + '/translations');
+      const { data } = await res.json();
+      ['readTranslation', 'searchTranslation', 'votdTranslation'].forEach(id => {
+        const sel = document.getElementById(id);
+        sel.innerHTML = data.map(t => '<option value="'+t.abbr+'">'+t.name+'</option>').join('');
+      });
+      loadBooks();
+      loadVotd();
+    }
+
+    // --- Tab switching ---
+    function switchTab(tab) {
+      document.querySelectorAll('.tab').forEach((t, i) => {
+        t.classList.toggle('active', t.textContent.toLowerCase().includes(
+          tab === 'read' ? 'doc' : tab === 'search' ? 'tim' : 'cau'
+        ));
+      });
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.getElementById('sec-' + tab).classList.add('active');
+    }
+
+    // --- Read ---
+    async function loadBooks() {
+      const t = document.getElementById('readTranslation').value;
+      const res = await fetch(API + '/books?translation=' + t);
+      const { data } = await res.json();
+      booksData = data;
+      const sel = document.getElementById('readBook');
+      sel.innerHTML = '<option value="">-- Chon sach --</option>' +
+        data.map(b => '<option value="'+b.id+'">'+b.name+'</option>').join('');
+      document.getElementById('readChapter').innerHTML = '<option>--</option>';
+      document.getElementById('versesContainer').innerHTML = '<div class="empty">Chon sach va chuong de bat dau doc</div>';
+      document.getElementById('chapterNav').style.display = 'none';
+      document.getElementById('chapterTitle').textContent = '';
+    }
+
+    async function loadChapters() {
+      const bookId = document.getElementById('readBook').value;
+      if (!bookId) return;
+      currentBookId = parseInt(bookId);
+      const t = document.getElementById('readTranslation').value;
+      const res = await fetch(API + '/books/' + bookId + '/chapters?translation=' + t);
+      const { data } = await res.json();
+      chaptersData = data;
+      const sel = document.getElementById('readChapter');
+      sel.innerHTML = data.map(c => '<option value="'+c.chapter+'">Chuong '+c.chapter+'</option>').join('');
+      currentChapter = 1;
+      loadVerses();
+    }
+
+    async function loadVerses() {
+      const t = document.getElementById('readTranslation').value;
+      const b = document.getElementById('readBook').value;
+      const c = document.getElementById('readChapter').value;
+      if (!b || !c || c === '--') return;
+      currentChapter = parseInt(c);
+
+      document.getElementById('versesContainer').innerHTML = '<div class="loading">Dang tai...</div>';
+
+      const res = await fetch(API + '/verses/' + t + '/' + b + '/' + c);
+      const { data } = await res.json();
+
+      const bookName = booksData.find(bk => bk.id == b)?.name || '';
+      document.getElementById('chapterTitle').textContent = bookName + ' - Chuong ' + c;
+
+      document.getElementById('versesContainer').innerHTML = data.map(v =>
+        '<div class="verse-item"><span class="verse-num">' + v.verse + '</span><span class="verse-text">' + cleanText(v.text) + '</span></div>'
+      ).join('');
+
+      document.getElementById('chapterNav').style.display = 'flex';
+      document.getElementById('prevChapter').disabled = currentChapter <= 1;
+      document.getElementById('nextChapter').disabled = currentChapter >= chaptersData.length;
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function changeChapter(dir) {
+      const newChapter = currentChapter + dir;
+      if (newChapter < 1 || newChapter > chaptersData.length) return;
+      document.getElementById('readChapter').value = newChapter;
+      loadVerses();
+    }
+
+    function cleanText(text) {
+      return text.replace(/\{[A-Z]\d+\}/g, '').replace(/\{\([A-Z]\d+\)\}/g, '').replace(/\s+/g, ' ').trim();
+    }
+
+    // --- Search ---
+    async function doSearch(append) {
+      const q = document.getElementById('searchInput').value.trim();
+      if (!q) return;
+      const t = document.getElementById('searchTranslation').value;
+      if (!append) searchOffset = 0;
+
+      const res = await fetch(API + '/search?q=' + encodeURIComponent(q) + '&translation=' + t + '&limit=20&offset=' + searchOffset);
+      const { data, pagination } = await res.json();
+      searchTotal = pagination.total;
+
+      document.getElementById('searchInfo').textContent =
+        'Tim thay ' + searchTotal + ' ket qua cho "' + q + '"';
+
+      const html = data.map(r =>
+        '<div class="search-result">' +
+          '<div class="search-result-ref">' + r.book_name + ' ' + r.chapter + ':' + r.verse + '</div>' +
+          '<div class="search-result-text">' + cleanText(r.text) + '</div>' +
+        '</div>'
+      ).join('');
+
+      const container = document.getElementById('searchResults');
+      if (append) {
+        container.querySelector('.load-more')?.remove();
+        container.insertAdjacentHTML('beforeend', html);
+      } else {
+        container.innerHTML = html;
+      }
+
+      searchOffset += 20;
+      if (searchOffset < searchTotal) {
+        container.insertAdjacentHTML('beforeend',
+          '<button class="load-more" onclick="doSearch(true)">Xem them (' + (searchTotal - searchOffset) + ' con lai)</button>'
+        );
+      }
+    }
+
+    // --- VOTD ---
+    async function loadVotd() {
+      const t = document.getElementById('votdTranslation').value;
+      const res = await fetch(API + '/votd?translation=' + t);
+      const { data } = await res.json();
+
+      document.getElementById('votdCard').innerHTML =
+        '<div class="votd-card">' +
+          '<div class="votd-label">Cau Goc Hom Nay &mdash; ' + data.date + '</div>' +
+          '<div class="votd-text">"' + data.verses.map(v => cleanText(v.text)).join(' ') + '"</div>' +
+          '<div><span class="votd-ref">' + data.display_reference + '</span>' +
+          (data.theme ? '<span class="votd-theme">' + data.theme + '</span>' : '') +
+          '</div>' +
+        '</div>';
+    }
+
+    init();
+  </script>
+</body>
+</html>

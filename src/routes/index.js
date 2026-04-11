@@ -7,6 +7,7 @@ const bookRoutes = require('./book.routes');
 const verseRoutes = require('./verse.routes');
 const verseController = require('../controllers/verse.controller');
 const votdController = require('../controllers/votd.controller');
+const statusController = require('../controllers/status.controller');
 
 const router = Router();
 
@@ -24,6 +25,8 @@ router.get('/votd',
   }),
   votdController.getVotd
 );
+
+router.get('/status', statusController.getStatus);
 
 router.get('/search',
   cache(300),

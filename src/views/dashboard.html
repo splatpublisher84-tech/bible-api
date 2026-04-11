@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bible API — Dashboard</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+    .container { max-width: 960px; margin: 0 auto; padding: 32px 20px; }
+    h1 { font-size: 24px; font-weight: 600; margin-bottom: 4px; }
+    .subtitle { color: #94a3b8; font-size: 14px; margin-bottom: 32px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px; }
+    .card { background: #1e293b; border-radius: 12px; padding: 20px; border: 1px solid #334155; }
+    .card-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; margin-bottom: 8px; }
+    .card-value { font-size: 28px; font-weight: 700; }
+    .card-detail { font-size: 13px; color: #64748b; margin-top: 4px; }
+    .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+    .status-ok { background: #22c55e; box-shadow: 0 0 6px #22c55e; }
+    .status-error { background: #ef4444; box-shadow: 0 0 6px #ef4444; }
+    .status-loading { background: #f59e0b; box-shadow: 0 0 6px #f59e0b; }
+    .section { margin-bottom: 32px; }
+    .section-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #cbd5e1; }
+    .links { display: flex; flex-wrap: wrap; gap: 12px; }
+    .link-card { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 16px 20px; text-decoration: none; color: #e2e8f0; transition: border-color 0.2s; flex: 1; min-width: 180px; }
+    .link-card:hover { border-color: #60a5fa; }
+    .link-card-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .link-card-desc { font-size: 12px; color: #94a3b8; }
+    .refresh-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .refresh-btn { background: #334155; border: none; color: #e2e8f0; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+    .refresh-btn:hover { background: #475569; }
+    .last-update { font-size: 12px; color: #64748b; }
+    .endpoints-table { width: 100%; border-collapse: collapse; }
+    .endpoints-table th, .endpoints-table td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #334155; font-size: 13px; }
+    .endpoints-table th { color: #94a3b8; font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .endpoints-table td { color: #e2e8f0; }
+    .method { background: #1d4ed8; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+    .endpoint-path { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; color: #93c5fd; }
+    .progress-bar { background: #334155; border-radius: 6px; height: 8px; margin-top: 8px; overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 6px; transition: width 0.5s; }
+    .progress-ok { background: #22c55e; }
+    .progress-warn { background: #f59e0b; }
+    .progress-danger { background: #ef4444; }
+    .warning-banner { background: #451a03; border: 1px solid #92400e; border-radius: 10px; padding: 14px 18px; margin-bottom: 24px; display: none; }
+    .warning-banner .warning-title { color: #fbbf24; font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+    .warning-banner .warning-text { color: #fcd34d; font-size: 13px; }
+    .cost-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #334155; }
+    .cost-row:last-child { border-bottom: none; }
+    .cost-label { font-size: 13px; color: #94a3b8; }
+    .cost-value { font-size: 14px; font-weight: 600; }
+    .cost-free { color: #22c55e; }
+    @media (max-width: 600px) { .grid { grid-template-columns: 1fr 1fr; } .card-value { font-size: 22px; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Bible API Dashboard</h1>
+    <p class="subtitle">System monitoring for the team</p>
+
+    <div class="refresh-bar">
+      <button class="refresh-btn" onclick="loadData()">Refresh</button>
+      <span class="last-update" id="lastUpdate">Loading...</span>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="card-label">API Status</div>
+        <div class="card-value"><span class="status-dot status-loading" id="apiDot"></span><span id="apiStatus">...</span></div>
+        <div class="card-detail" id="apiUptime"></div>
+      </div>
+      <div class="card">
+        <div class="card-label">Database</div>
+        <div class="card-value"><span class="status-dot status-loading" id="dbDot"></span><span id="dbStatus">...</span></div>
+        <div class="card-detail" id="dbLatency"></div>
+      </div>
+      <div class="card">
+        <div class="card-label">Translations</div>
+        <div class="card-value" id="translations">-</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Total Verses</div>
+        <div class="card-value" id="verses">-</div>
+        <div class="card-detail" id="books"></div>
+      </div>
+      <div class="card">
+        <div class="card-label">Memory</div>
+        <div class="card-value" id="memory">-</div>
+        <div class="card-detail" id="nodeVersion"></div>
+      </div>
+      <div class="card">
+        <div class="card-label">Environment</div>
+        <div class="card-value" id="env">-</div>
+      </div>
+    </div>
+
+    <div class="warning-banner" id="warningBanner">
+      <div class="warning-title" id="warningTitle"></div>
+      <div class="warning-text" id="warningText"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Chi phi & Gioi han</div>
+      <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+        <div class="card">
+          <div class="card-label">Supabase Database</div>
+          <div class="card-value" id="dbSize">-</div>
+          <div class="card-detail" id="dbLimit"></div>
+          <div class="progress-bar"><div class="progress-fill progress-ok" id="dbProgress" style="width: 0%"></div></div>
+          <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #334155;">
+            <div class="cost-row"><span class="cost-label">Tier</span><span class="cost-value cost-free" id="supabaseTier">Free</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-label">Fly.io Compute</div>
+          <div class="card-value" id="flyEstimate">-</div>
+          <div class="card-detail" id="flyVm"></div>
+          <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #334155;">
+            <div class="cost-row"><span class="cost-label">Auto-stop</span><span class="cost-value cost-free" id="flyAutoStop">-</span></div>
+            <div class="cost-row"><span class="cost-label">Min machines</span><span class="cost-value" id="flyMinMachines">-</span></div>
+            <div class="cost-row"><span class="cost-label">Tier</span><span class="cost-value cost-free" id="flyTier">-</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">API Endpoints</div>
+      <div class="card" style="padding: 0; overflow: auto;">
+        <table class="endpoints-table">
+          <thead>
+            <tr><th>Method</th><th>Endpoint</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><span class="method">GET</span></td><td class="endpoint-path">/api/translations</td><td>Danh sach ban dich</td></tr>
+            <tr><td><span class="method">GET</span></td><td class="endpoint-path">/api/translations/:abbr</td><td>Chi tiet ban dich</td></tr>
+            <tr><td><span class="method">GET</span></td><td class="endpoint-path">/api/books?translation=</td><td>66 sach Kinh Thanh</td></tr>
+            <tr><td><span class="method">GET</span></td><td class="endpoint-path">/api/books/:id/chapters</td><td>Chuong va so cau</td></tr>
+            <tr><td><span class="method">GET</span></td><td class="endpoint-path">/api/verses/:t/:b/:c</td><td>Tat ca cau trong chuong</td></tr>
+            <tr><td><span class="method">GET</span></td><td class="endpoint-path">/api/verses/:t/:b/:c/:v</td><td>Mot cau cu the</td></tr>
+            <tr><td><span class="method">GET</span></td><td class="endpoint-path">/api/votd</td><td>Cau Goc Moi Ngay</td></tr>
+            <tr><td><span class="method">GET</span></td><td class="endpoint-path">/api/search?q=&translation=</td><td>Tim kiem toan van</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Quick Links</div>
+      <div class="links">
+        <a class="link-card" href="/demo" target="_blank" style="border-color: #1d4ed8;">
+          <div class="link-card-title">Demo App</div>
+          <div class="link-card-desc">Test API tren giao dien thuc te</div>
+        </a>
+        <a class="link-card" href="/api-docs" target="_blank">
+          <div class="link-card-title">Swagger Docs</div>
+          <div class="link-card-desc">API documentation cho dev</div>
+        </a>
+        <a class="link-card" href="https://fly.io/apps/bible-api-ibsnxg" target="_blank">
+          <div class="link-card-title">Fly.io Dashboard</div>
+          <div class="link-card-desc">Logs, metrics, billing</div>
+        </a>
+        <a class="link-card" href="https://supabase.com/dashboard" target="_blank">
+          <div class="link-card-title">Supabase Dashboard</div>
+          <div class="link-card-desc">Database, usage, storage</div>
+        </a>
+        <a class="link-card" href="https://github.com/splatpublisher84-tech/bible-api" target="_blank">
+          <div class="link-card-title">GitHub Repo</div>
+          <div class="link-card-desc">Source code & issues</div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function loadData() {
+      try {
+        const res = await fetch('/api/status');
+        const d = await res.json();
+
+        document.getElementById('apiStatus').textContent = d.api.status.toUpperCase();
+        document.getElementById('apiDot').className = 'status-dot ' + (d.api.status === 'ok' ? 'status-ok' : 'status-error');
+        document.getElementById('apiUptime').textContent = 'Uptime: ' + d.api.uptime;
+
+        document.getElementById('dbStatus').textContent = d.database.status.toUpperCase();
+        document.getElementById('dbDot').className = 'status-dot ' + (d.database.status === 'ok' ? 'status-ok' : 'status-error');
+        document.getElementById('dbLatency').textContent = d.database.latency ? 'Latency: ' + d.database.latency : d.database.message || '';
+
+        document.getElementById('translations').textContent = d.data.translations ?? '-';
+        document.getElementById('verses').textContent = d.data.verses?.toLocaleString() ?? '-';
+        document.getElementById('books').textContent = d.data.books ? d.data.books + ' books' : '';
+
+        document.getElementById('memory').textContent = d.system.memory_used;
+        document.getElementById('nodeVersion').textContent = d.system.node_version;
+        document.getElementById('env').textContent = d.system.env;
+
+        // Costs
+        if (d.costs) {
+          const s = d.costs.supabase;
+          const f = d.costs.flyio;
+
+          document.getElementById('dbSize').textContent = s.db_size;
+          document.getElementById('dbLimit').textContent = s.db_usage_percent + '% of ' + s.db_limit + ' free tier';
+          document.getElementById('dbProgress').style.width = s.db_usage_percent + '%';
+          document.getElementById('dbProgress').className = 'progress-fill ' + (s.db_usage_percent >= 80 ? 'progress-danger' : s.db_usage_percent >= 50 ? 'progress-warn' : 'progress-ok');
+          document.getElementById('supabaseTier').textContent = s.tier;
+
+          document.getElementById('flyEstimate').textContent = f.estimate;
+          document.getElementById('flyVm').textContent = f.vm;
+          document.getElementById('flyAutoStop').textContent = f.auto_stop ? 'ON' : 'OFF';
+          document.getElementById('flyMinMachines').textContent = f.min_machines;
+          document.getElementById('flyTier').textContent = f.tier;
+
+          // Warning banner
+          if (s.warning) {
+            document.getElementById('warningBanner').style.display = 'block';
+            document.getElementById('warningTitle').textContent = 'Canh bao chi phi';
+            document.getElementById('warningText').textContent = s.warning;
+          } else {
+            document.getElementById('warningBanner').style.display = 'none';
+          }
+        }
+
+        document.getElementById('lastUpdate').textContent = 'Updated: ' + new Date(d.timestamp).toLocaleTimeString();
+      } catch (e) {
+        document.getElementById('apiStatus').textContent = 'ERROR';
+        document.getElementById('apiDot').className = 'status-dot status-error';
+        document.getElementById('lastUpdate').textContent = 'Failed to load';
+      }
+    }
+
+    loadData();
+    setInterval(loadData, 30000);
+  </script>
+</body>
+</html>

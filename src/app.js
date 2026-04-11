@@ -6,6 +6,7 @@ const pinoHttp = require('pino-http');
 const swaggerUi = require('swagger-ui-express');
 const logger = require('./config/logger');
 const swaggerSpec = require('./config/swagger');
+const path = require('path');
 const apiRoutes = require('./routes');
 const { errorHandler } = require('./middlewares/errorHandler');
 require('dotenv').config();
@@ -49,6 +50,36 @@ app.get('/', (req, res) => {
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date() });
 });
+
+// Demo app
+app.get('/demo',
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      connectSrc: ["'self'"],
+    },
+  }),
+  (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'demo.html'));
+  }
+);
+
+// Dashboard (relaxed CSP for inline script)
+app.get('/dashboard',
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      connectSrc: ["'self'"],
+    },
+  }),
+  (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'dashboard.html'));
+  }
+);
 
 // API routes
 app.use('/api', apiRoutes);
