@@ -51,35 +51,26 @@ app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date() });
 });
 
-// Demo app
-app.get('/demo',
-  helmet.contentSecurityPolicy({
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      connectSrc: ["'self'"],
-    },
-  }),
-  (req, res) => {
-    res.sendFile(path.join(__dirname, 'views', 'demo.html'));
-  }
-);
+// Shared CSP for pages with inline scripts
+const pageCsp = helmet.contentSecurityPolicy({
+  directives: {
+    defaultSrc: ["'self'"],
+    scriptSrc: ["'self'", "'unsafe-inline'"],
+    scriptSrcAttr: ["'unsafe-inline'"],
+    styleSrc: ["'self'", "'unsafe-inline'"],
+    connectSrc: ["'self'"],
+  },
+});
 
-// Dashboard (relaxed CSP for inline script)
-app.get('/dashboard',
-  helmet.contentSecurityPolicy({
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      connectSrc: ["'self'"],
-    },
-  }),
-  (req, res) => {
-    res.sendFile(path.join(__dirname, 'views', 'dashboard.html'));
-  }
-);
+// Demo app
+app.get('/demo', pageCsp, (req, res) => {
+  res.sendFile(path.join(__dirname, 'views', 'demo.html'));
+});
+
+// Dashboard
+app.get('/dashboard', pageCsp, (req, res) => {
+  res.sendFile(path.join(__dirname, 'views', 'dashboard.html'));
+});
 
 // API routes
 app.use('/api', apiRoutes);
