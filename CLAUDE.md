@@ -58,15 +58,49 @@ Key design: single `verses` table for all translations (not separate tables per 
 **Data import pipeline** (`scripts/convert-module-to-pg.js`):
 Converts Bible SuperSearch module format (info.json + pipe-delimited verses.txt) to PostgreSQL INSERT statements with batch inserts (500 rows) and auto-generated `chapter_info`.
 
+## Deployment
+
+**Production:** Fly.io (`bible-api-ibsnxg.fly.dev`) + Supabase PostgreSQL
+
+```bash
+# Deploy (or use /deploy skill)
+flyctl deploy
+
+# Set secrets
+flyctl secrets set KEY=VALUE
+```
+
+Quick deploy with skill: type `/deploy` — runs tests, commits, deploys, verifies.
+
 ## Environment Variables
 
 Loaded via `dotenv` from `.env`:
 - `PORT` (default 3000)
 - `NODE_ENV`
 - `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`
+- `METRICS_KEY` — protects `/api/metrics` endpoint
 
-## Custom Agents
+## Monitoring
 
-Two specialized agents are configured in `.claude/agents/`:
-- **bible-backend-advisor** — Biblical domain expertise (data modeling, reference parsing, cross-references, reading plans)
+Dashboard at `/dashboard` — 5 pages: Overview, Traffic (6 charts), Logs, Costs, API Reference.
+
+Tracking components:
+- `src/middlewares/requestTracker.js` — HTTP requests (client vs internal)
+- `src/middlewares/systemTracker.js` — DB queries + memory usage
+- `src/public/js/dashboard.js` — Chart.js visualizations
+
+## Claude Code Setup
+
+### Rules (`.claude/rules/`)
+Context-specific guidance that loads automatically when editing related files:
+- `deployment.md` — Fly.io + Supabase deploy patterns
+- `database.md` — Schema, query patterns, pool usage
+- `api-patterns.md` — Controller-Route-Model conventions
+- `monitoring.md` — Dashboard + metrics architecture
+
+### Skills (`.claude/skills/`)
+- `/deploy` — Full deployment workflow with pre-flight checks
+
+### Agents (`.claude/agents/`)
+- **bible-backend-advisor** — Biblical domain expertise (data modeling, reference parsing, cross-references)
 - **backend-mentor** — Teaching-focused backend guidance in Vietnamese with English technical terms
