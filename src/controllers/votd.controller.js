@@ -13,7 +13,7 @@ function hashDate(dateString) {
 
 function getDayOfYear(date) {
   const start = new Date(date.getFullYear(), 0, 0);
-  const diff = date - start;
+  const diff = date.getTime() - start.getTime();
   return Math.floor(diff / (1000 * 60 * 60 * 24));
 }
 

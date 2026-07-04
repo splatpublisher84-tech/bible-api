@@ -1,0 +1,7 @@
+echo "🔍 Biome đang kiểm tra các file staged..."
+if ! npx biome check --staged --no-errors-on-unmatched; then
+  echo ""
+  echo "❌ Commit bị chặn: code chưa đạt chuẩn (format hoặc lint)."
+  echo "   Sửa tự động rồi 'git add' lại và commit:  npm run check:fix"
+  exit 1
+fi

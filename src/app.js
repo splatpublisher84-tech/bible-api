@@ -17,6 +17,7 @@ require('dotenv').config();
 const app = express();
 
 // Security middlewares
+// @ts-expect-error - helmet là CommonJS, type định nghĩa không callable dưới checkJs (chạy runtime bình thường)
 app.use(helmet());
 app.use(
   cors({
@@ -27,6 +28,7 @@ app.use(
 
 // Rate limiting
 app.use(
+  // @ts-expect-error - express-rate-limit CommonJS, type không callable dưới checkJs (chạy runtime bình thường)
   rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 500, // 500 requests per IP per window
@@ -37,6 +39,7 @@ app.use(
 );
 
 // Request logging
+// @ts-expect-error - pino-http CommonJS, type không callable dưới checkJs (chạy runtime bình thường)
 app.use(pinoHttp({ logger }));
 
 // Body parsing

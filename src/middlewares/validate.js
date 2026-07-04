@@ -1,3 +1,7 @@
+/**
+ * Middleware validate request bằng Zod schema.
+ * @param {{ params?: import('zod').ZodTypeAny, query?: import('zod').ZodTypeAny, body?: import('zod').ZodTypeAny }} [schemas]
+ */
 function validate({ params, query, body } = {}) {
   return (req, res, next) => {
     if (params) req.params = params.parse(req.params);

@@ -4,7 +4,7 @@ require('dotenv').config();
 
 const pool = new Pool({
   host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
+  port: process.env.DB_PORT ? Number(process.env.DB_PORT) : undefined,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
@@ -16,6 +16,7 @@ const pool = new Pool({
 
 // Wrap pool.query to track performance
 const originalQuery = pool.query.bind(pool);
+// @ts-expect-error - cố ý ghi đè pool.query để đo hiệu năng (monkey-patch); type của pg không cho gán lại
 pool.query = async (...args) => {
   const start = Date.now();
   try {
