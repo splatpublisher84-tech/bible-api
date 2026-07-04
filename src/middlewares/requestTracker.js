@@ -2,8 +2,12 @@ const MAX_LOGS = 100;
 const MAX_HOURLY = 24;
 
 const INTERNAL_PATHS = new Set([
-  '/', '/health', '/dashboard', '/demo',
-  '/api/status', '/api/metrics',
+  '/',
+  '/health',
+  '/dashboard',
+  '/demo',
+  '/api/status',
+  '/api/metrics',
 ]);
 
 function classifyRequest(path) {
@@ -33,10 +37,10 @@ function createBucket(hourKey) {
     errors: 0,
     errors_4xx: 0,
     errors_5xx: 0,
-    durations: [],        // raw durations for percentile calculation
+    durations: [], // raw durations for percentile calculation
     _total_ms: 0,
     _count: 0,
-    db_ok: true,          // health tracking
+    db_ok: true, // health tracking
   };
 }
 
@@ -52,7 +56,7 @@ function requestTracker(req, res, next) {
   const start = Date.now();
   const originalEnd = res.end;
 
-  res.end = function (...args) {
+  res.end = (...args) => {
     const duration = Date.now() - start;
     const source = classifyRequest(req.path);
 
@@ -71,12 +75,12 @@ function requestTracker(req, res, next) {
     state.totals[source]++;
     if (res.statusCode >= 400) state.totals.errors++;
 
-    const key = req.method + ' ' + (req.route?.path || req.path);
+    const key = `${req.method} ${req.route?.path || req.path}`;
     if (!state.endpoints[key]) state.endpoints[key] = { client: 0, internal: 0 };
     state.endpoints[key][source]++;
 
     const hourKey = getHourKey();
-    let bucket = state.hourly.find(h => h.hour === hourKey);
+    let bucket = state.hourly.find((h) => h.hour === hourKey);
     if (!bucket) {
       bucket = createBucket(hourKey);
       state.hourly.push(bucket);
@@ -109,11 +113,16 @@ function requestTracker(req, res, next) {
 
 function getMetrics() {
   const topEndpoints = Object.entries(state.endpoints)
-    .map(([endpoint, counts]) => ({ endpoint, client: counts.client, internal: counts.internal, total: counts.client + counts.internal }))
+    .map(([endpoint, counts]) => ({
+      endpoint,
+      client: counts.client,
+      internal: counts.internal,
+      total: counts.client + counts.internal,
+    }))
     .sort((a, b) => b.total - a.total)
     .slice(0, 10);
 
-  const hourly = state.hourly.map(h => {
+  const hourly = state.hourly.map((h) => {
     const sorted = [...h.durations].sort((a, b) => a - b);
     const total = h.client + h.internal;
     return {
@@ -132,17 +141,21 @@ function getMetrics() {
   });
 
   // Health timeline: one status per hour
-  const health = state.hourly.map(h => {
+  const health = state.hourly.map((h) => {
     const total = h.client + h.internal;
     const avgMs = h._count > 0 ? Math.round(h._total_ms / h._count) : 0;
     let status = 'ok';
-    if (h.errors_5xx > 0 && total > 0 && (h.errors_5xx / total) > 0.5) status = 'down';
+    if (h.errors_5xx > 0 && total > 0 && h.errors_5xx / total > 0.5) status = 'down';
     else if (h.errors_5xx > 0 || avgMs > 3000) status = 'degraded';
     return { hour: h.hour, status, avg_ms: avgMs };
   });
 
   return {
-    totals: { ...state.totals, total: state.totals.client + state.totals.internal, uptime: Date.now() - state.startTime },
+    totals: {
+      ...state.totals,
+      total: state.totals.client + state.totals.internal,
+      uptime: Date.now() - state.startTime,
+    },
     hourly,
     health,
     top_endpoints: topEndpoints,

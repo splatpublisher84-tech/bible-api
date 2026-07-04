@@ -7,7 +7,8 @@ const router = Router();
 
 router.get('/', controller.list);
 
-router.get('/:abbr',
+router.get(
+  '/:abbr',
   validate({ params: z.object({ abbr: z.string().min(1) }) }),
   controller.getByAbbr
 );

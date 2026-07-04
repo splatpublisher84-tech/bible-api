@@ -11,12 +11,14 @@ const verseParams = z.object({
   chapter: z.coerce.number().int().min(1),
 });
 
-router.get('/:translation/:book/:chapter',
+router.get(
+  '/:translation/:book/:chapter',
   validate({ params: verseParams }),
   controller.getChapter
 );
 
-router.get('/:translation/:book/:chapter/:verse',
+router.get(
+  '/:translation/:book/:chapter/:verse',
   validate({
     params: verseParams.extend({
       verse: z.coerce.number().int().min(1),

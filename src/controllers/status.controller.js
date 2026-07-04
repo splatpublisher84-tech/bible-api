@@ -37,7 +37,7 @@ async function getStatus(req, res) {
       pool.query('SELECT count(*)::int AS count FROM translations'),
       pool.query('SELECT count(*)::int AS count FROM verses'),
       pool.query('SELECT count(*)::int AS count FROM books'),
-      pool.query("SELECT pg_database_size(current_database()) AS bytes"),
+      pool.query('SELECT pg_database_size(current_database()) AS bytes'),
     ]);
 
     const dbBytes = Number(dbSize.rows[0].bytes);
@@ -57,7 +57,10 @@ async function getStatus(req, res) {
         db_limit: `${supabaseLimitMB}MB`,
         db_usage_percent: dbUsagePercent,
         tier: 'Free',
-        warning: dbUsagePercent >= 80 ? `Database usage at ${dbUsagePercent}% — consider upgrading or cleaning up` : null,
+        warning:
+          dbUsagePercent >= 80
+            ? `Database usage at ${dbUsagePercent}% — consider upgrading or cleaning up`
+            : null,
       },
       flyio: {
         vm: 'shared-cpu-1x, 256MB',

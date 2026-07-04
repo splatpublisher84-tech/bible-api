@@ -15,12 +15,11 @@ async function resolveTranslationAndBook(translationAbbr, bookId) {
 
 async function getChapter(req, res) {
   const { translation, book } = await resolveTranslationAndBook(
-    req.params.translation, req.params.book
+    req.params.translation,
+    req.params.book
   );
 
-  const data = await verseModel.findByChapter(
-    translation.id, book.id, req.params.chapter
-  );
+  const data = await verseModel.findByChapter(translation.id, book.id, req.params.chapter);
   if (data.length === 0) throw new AppError(404, 'Chapter not found');
 
   res.json({ data });
@@ -28,11 +27,15 @@ async function getChapter(req, res) {
 
 async function getVerse(req, res) {
   const { translation, book } = await resolveTranslationAndBook(
-    req.params.translation, req.params.book
+    req.params.translation,
+    req.params.book
   );
 
   const data = await verseModel.findOne(
-    translation.id, book.id, req.params.chapter, req.params.verse
+    translation.id,
+    book.id,
+    req.params.chapter,
+    req.params.verse
   );
   if (!data) throw new AppError(404, 'Verse not found');
 
@@ -45,9 +48,7 @@ async function search(req, res) {
   const translationRow = await translationModel.findByAbbr(abbr);
   if (!translationRow) throw new AppError(404, 'Translation not found');
 
-  const { total, rows } = await verseModel.search(
-    translationRow.id, q, limit, offset
-  );
+  const { total, rows } = await verseModel.search(translationRow.id, q, limit, offset);
 
   res.json({
     data: rows,

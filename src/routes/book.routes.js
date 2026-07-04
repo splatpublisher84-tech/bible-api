@@ -5,12 +5,10 @@ const controller = require('../controllers/book.controller');
 
 const router = Router();
 
-router.get('/',
-  validate({ query: z.object({ translation: z.string().min(1) }) }),
-  controller.list
-);
+router.get('/', validate({ query: z.object({ translation: z.string().min(1) }) }), controller.list);
 
-router.get('/:bookId/chapters',
+router.get(
+  '/:bookId/chapters',
   validate({
     params: z.object({ bookId: z.coerce.number().int().min(1).max(66) }),
     query: z.object({ translation: z.string().min(1) }),

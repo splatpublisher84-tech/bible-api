@@ -5,7 +5,7 @@ const { AppError } = require('../middlewares/errorHandler');
 function hashDate(dateString) {
   let hash = 0;
   for (let i = 0; i < dateString.length; i++) {
-    hash = ((hash << 5) - hash) + dateString.charCodeAt(i);
+    hash = (hash << 5) - hash + dateString.charCodeAt(i);
     hash = hash & hash;
   }
   return Math.abs(hash);
@@ -46,8 +46,11 @@ async function getVotd(req, res) {
 
   // 3. Fetch verse texts for the requested translation
   const verses = await votdModel.findVerseTexts(
-    translation.id, votdVerse.book_id, votdVerse.chapter,
-    votdVerse.verse_start, votdVerse.verse_end
+    translation.id,
+    votdVerse.book_id,
+    votdVerse.chapter,
+    votdVerse.verse_start,
+    votdVerse.verse_end
   );
 
   if (verses.length === 0) {

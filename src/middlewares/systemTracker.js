@@ -2,8 +2,8 @@ const MAX_HOURLY = 24;
 const MEMORY_INTERVAL = 60_000; // sample every 60s
 
 const state = {
-  hourly: [],       // { hour, queries, durations[], errors }
-  memory: [],       // { time, heapUsed, heapTotal, rss }
+  hourly: [], // { hour, queries, durations[], errors }
+  memory: [], // { time, heapUsed, heapTotal, rss }
 };
 
 function getHourKey() {
@@ -20,7 +20,7 @@ function percentile(sorted, p) {
 
 function getBucket() {
   const hourKey = getHourKey();
-  let bucket = state.hourly.find(h => h.hour === hourKey);
+  let bucket = state.hourly.find((h) => h.hour === hourKey);
   if (!bucket) {
     bucket = { hour: hourKey, queries: 0, errors: 0, durations: [] };
     state.hourly.push(bucket);
@@ -44,7 +44,7 @@ function sampleMemory() {
   const mem = process.memoryUsage();
   const entry = {
     time: new Date().toISOString(),
-    heapUsed: Math.round(mem.heapUsed / 1024 / 1024),   // MB
+    heapUsed: Math.round(mem.heapUsed / 1024 / 1024), // MB
     heapTotal: Math.round(mem.heapTotal / 1024 / 1024),
     rss: Math.round(mem.rss / 1024 / 1024),
   };
@@ -60,7 +60,7 @@ setInterval(sampleMemory, MEMORY_INTERVAL);
 // --- Export Metrics ---
 
 function getSystemMetrics() {
-  const dbHourly = state.hourly.map(h => {
+  const dbHourly = state.hourly.map((h) => {
     const sorted = [...h.durations].sort((a, b) => a - b);
     return {
       hour: h.hour,
@@ -79,7 +79,10 @@ function getSystemMetrics() {
     memSampled.push(state.memory[i]);
   }
   // Always include the latest
-  if (state.memory.length > 0 && memSampled[memSampled.length - 1] !== state.memory[state.memory.length - 1]) {
+  if (
+    state.memory.length > 0 &&
+    memSampled[memSampled.length - 1] !== state.memory[state.memory.length - 1]
+  ) {
     memSampled.push(state.memory[state.memory.length - 1]);
   }
 

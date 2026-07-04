@@ -36,7 +36,6 @@
     .sel-chapter { flex: 0.7; min-width: 80px; }
 
     /* Verses */
-    .verses-container { }
     .verse-item { padding: 8px 0; line-height: 1.8; font-size: 16px; }
     .verse-num { color: #60a5fa; font-size: 12px; font-weight: 700; vertical-align: super; margin-right: 4px; }
     .verse-text { color: #cbd5e1; }
@@ -105,8 +104,8 @@
         <div class="empty">Chon sach va chuong de bat dau doc</div>
       </div>
       <div class="chapter-nav" id="chapterNav" style="display:none;">
-        <button class="nav-btn" id="prevChapter">Chuong truoc</button>
-        <button class="nav-btn" id="nextChapter">Chuong sau</button>
+        <button type="button" class="nav-btn" id="prevChapter">Chuong truoc</button>
+        <button type="button" class="nav-btn" id="nextChapter">Chuong sau</button>
       </div>
     </div>
 
@@ -117,7 +116,7 @@
       </div>
       <div class="search-bar">
         <input class="search-input" id="searchInput" placeholder="Nhap tu khoa...">
-        <button class="search-btn" id="searchBtn">Tim</button>
+        <button type="button" class="search-btn" id="searchBtn">Tim</button>
       </div>
       <div id="searchInfo" class="search-info"></div>
       <div id="searchResults"></div>
@@ -144,17 +143,17 @@
     let booksData = [];
     let chaptersData = [];
     let currentChapter = 1;
-    let currentBookId = null;
+    let _currentBookId = null;
     let searchOffset = 0;
     let searchTotal = 0;
 
     // --- Init ---
     async function init() {
-      const res = await fetch(API + '/translations');
+      const res = await fetch(`${API}/translations`);
       const { data } = await res.json();
       ['readTranslation', 'searchTranslation', 'votdTranslation'].forEach(id => {
         const sel = document.getElementById(id);
-        sel.innerHTML = data.map(t => '<option value="' + esc(t.abbr) + '">' + esc(t.name) + '</option>').join('');
+        sel.innerHTML = data.map(t => `<option value="${esc(t.abbr)}">${esc(t.name)}</option>`).join('');
       });
       loadBooks();
       loadVotd();
@@ -165,19 +164,21 @@
       document.querySelectorAll('.tab[data-tab]').forEach(t => {
         t.classList.toggle('active', t.dataset.tab === tab);
       });
-      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-      document.getElementById('sec-' + tab).classList.add('active');
+      document.querySelectorAll('.section').forEach(s => {
+        s.classList.remove('active');
+      });
+      document.getElementById(`sec-${tab}`).classList.add('active');
     }
 
     // --- Read ---
     async function loadBooks() {
       const t = document.getElementById('readTranslation').value;
-      const res = await fetch(API + '/books?translation=' + encodeURIComponent(t));
+      const res = await fetch(`${API}/books?translation=${encodeURIComponent(t)}`);
       const { data } = await res.json();
       booksData = data;
       const sel = document.getElementById('readBook');
       sel.innerHTML = '<option value="">-- Chon sach --</option>' +
-        data.map(b => '<option value="' + esc(b.id) + '">' + esc(b.name) + '</option>').join('');
+        data.map(b => `<option value="${esc(b.id)}">${esc(b.name)}</option>`).join('');
       document.getElementById('readChapter').innerHTML = '<option>--</option>';
       document.getElementById('versesContainer').innerHTML = '<div class="empty">Chon sach va chuong de bat dau doc</div>';
       document.getElementById('chapterNav').style.display = 'none';
@@ -187,13 +188,13 @@
     async function loadChapters() {
       const bookId = document.getElementById('readBook').value;
       if (!bookId) return;
-      currentBookId = parseInt(bookId);
+      _currentBookId = parseInt(bookId, 10);
       const t = document.getElementById('readTranslation').value;
-      const res = await fetch(API + '/books/' + encodeURIComponent(bookId) + '/chapters?translation=' + encodeURIComponent(t));
+      const res = await fetch(`${API}/books/${encodeURIComponent(bookId)}/chapters?translation=${encodeURIComponent(t)}`);
       const { data } = await res.json();
       chaptersData = data;
       const sel = document.getElementById('readChapter');
-      sel.innerHTML = data.map(c => '<option value="' + c.chapter + '">Chuong ' + c.chapter + '</option>').join('');
+      sel.innerHTML = data.map(c => `<option value="${c.chapter}">Chuong ${c.chapter}</option>`).join('');
       currentChapter = 1;
       loadVerses();
     }
@@ -203,18 +204,18 @@
       const b = document.getElementById('readBook').value;
       const c = document.getElementById('readChapter').value;
       if (!b || !c || c === '--') return;
-      currentChapter = parseInt(c);
+      currentChapter = parseInt(c, 10);
 
       document.getElementById('versesContainer').innerHTML = '<div class="loading">Dang tai...</div>';
 
-      const res = await fetch(API + '/verses/' + encodeURIComponent(t) + '/' + encodeURIComponent(b) + '/' + encodeURIComponent(c));
+      const res = await fetch(`${API}/verses/${encodeURIComponent(t)}/${encodeURIComponent(b)}/${encodeURIComponent(c)}`);
       const { data } = await res.json();
 
-      const bookName = booksData.find(bk => bk.id == b)?.name || '';
-      document.getElementById('chapterTitle').textContent = bookName + ' - Chuong ' + c;
+      const bookName = booksData.find(bk => bk.id === Number(b))?.name || '';
+      document.getElementById('chapterTitle').textContent = `${bookName} - Chuong ${c}`;
 
       document.getElementById('versesContainer').innerHTML = data.map(v =>
-        '<div class="verse-item"><span class="verse-num">' + v.verse + '</span><span class="verse-text">' + esc(cleanText(v.text)) + '</span></div>'
+        `<div class="verse-item"><span class="verse-num">${v.verse}</span><span class="verse-text">${esc(cleanText(v.text))}</span></div>`
       ).join('');
 
       document.getElementById('chapterNav').style.display = 'flex';
@@ -242,12 +243,12 @@
       const t = document.getElementById('searchTranslation').value;
       if (!append) searchOffset = 0;
 
-      const res = await fetch(API + '/search?q=' + encodeURIComponent(q) + '&translation=' + encodeURIComponent(t) + '&limit=20&offset=' + searchOffset);
+      const res = await fetch(`${API}/search?q=${encodeURIComponent(q)}&translation=${encodeURIComponent(t)}&limit=20&offset=${searchOffset}`);
       const { data, pagination } = await res.json();
       searchTotal = pagination.total;
 
       document.getElementById('searchInfo').textContent =
-        'Tim thay ' + searchTotal + ' ket qua cho "' + q + '"';
+        `Tim thay ${searchTotal} ket qua cho "${q}"`;
 
       const html = data.map(r =>
         '<div class="search-result">' +
@@ -268,7 +269,7 @@
       if (searchOffset < searchTotal) {
         const btn = document.createElement('button');
         btn.className = 'load-more';
-        btn.textContent = 'Xem them (' + (searchTotal - searchOffset) + ' con lai)';
+        btn.textContent = `Xem them (${searchTotal - searchOffset} con lai)`;
         btn.addEventListener('click', () => doSearch(true));
         container.appendChild(btn);
       }
@@ -277,7 +278,7 @@
     // --- VOTD ---
     async function loadVotd() {
       const t = document.getElementById('votdTranslation').value;
-      const res = await fetch(API + '/votd?translation=' + encodeURIComponent(t));
+      const res = await fetch(`${API}/votd?translation=${encodeURIComponent(t)}`);
       const { data } = await res.json();
 
       document.getElementById('votdCard').innerHTML =
@@ -285,7 +286,7 @@
           '<div class="votd-label">Cau Goc Hom Nay &mdash; ' + esc(data.date) + '</div>' +
           '<div class="votd-text">"' + esc(data.verses.map(v => cleanText(v.text)).join(' ')) + '"</div>' +
           '<div><span class="votd-ref">' + esc(data.display_reference) + '</span>' +
-          (data.theme ? '<span class="votd-theme">' + esc(data.theme) + '</span>' : '') +
+          (data.theme ? `<span class="votd-theme">${esc(data.theme)}</span>` : '') +
           '</div>' +
         '</div>';
     }

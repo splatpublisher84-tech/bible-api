@@ -1,6 +1,6 @@
 const express = require('express');
-const crypto = require('crypto');
-const fs = require('fs');
+const crypto = require('node:crypto');
+const fs = require('node:fs');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
@@ -8,7 +8,7 @@ const pinoHttp = require('pino-http');
 const swaggerUi = require('swagger-ui-express');
 const logger = require('./config/logger');
 const swaggerSpec = require('./config/swagger');
-const path = require('path');
+const path = require('node:path');
 const apiRoutes = require('./routes');
 const { errorHandler } = require('./middlewares/errorHandler');
 const { requestTracker } = require('./middlewares/requestTracker');
@@ -18,19 +18,23 @@ const app = express();
 
 // Security middlewares
 app.use(helmet());
-app.use(cors({
-  origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : '*',
-  methods: ['GET'],
-}));
+app.use(
+  cors({
+    origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : '*',
+    methods: ['GET'],
+  })
+);
 
 // Rate limiting
-app.use(rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 500,                  // 500 requests per IP per window
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: 'Too many requests, please try again later.' },
-}));
+app.use(
+  rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 500, // 500 requests per IP per window
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Too many requests, please try again later.' },
+  })
+);
 
 // Request logging
 app.use(pinoHttp({ logger }));
@@ -54,7 +58,7 @@ app.get('/', (req, res) => {
     version: '1.0.0',
     endpoints: {
       health: '/health',
-    }
+    },
   });
 });
 
@@ -67,9 +71,12 @@ app.get('/health', (req, res) => {
 function serveWithNonce(filePath) {
   return (req, res) => {
     const nonce = crypto.randomBytes(16).toString('base64');
-    res.setHeader('Content-Security-Policy',
-      `default-src 'self'; script-src 'nonce-${nonce}'; style-src 'self' 'unsafe-inline'; connect-src 'self'`);
-    const html = fs.readFileSync(filePath, 'utf-8')
+    res.setHeader(
+      'Content-Security-Policy',
+      `default-src 'self'; script-src 'nonce-${nonce}'; style-src 'self' 'unsafe-inline'; connect-src 'self'`
+    );
+    const html = fs
+      .readFileSync(filePath, 'utf-8')
       .replace(/<script>/g, `<script nonce="${nonce}">`);
     res.type('html').send(html);
   };
@@ -78,11 +85,16 @@ function serveWithNonce(filePath) {
 // CSP for dashboard (external scripts from CDN + static)
 function serveDashboard(filePath) {
   return (req, res) => {
-    res.setHeader('Content-Security-Policy',
-      `default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; connect-src 'self'`);
+    res.setHeader(
+      'Content-Security-Policy',
+      `default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; connect-src 'self'`
+    );
     let html = fs.readFileSync(filePath, 'utf-8');
     if (process.env.METRICS_KEY) {
-      html = html.replace('</head>', `<meta name="metrics-key" content="${process.env.METRICS_KEY}">\n</head>`);
+      html = html.replace(
+        '</head>',
+        `<meta name="metrics-key" content="${process.env.METRICS_KEY}">\n</head>`
+      );
     }
     res.type('html').send(html);
   };

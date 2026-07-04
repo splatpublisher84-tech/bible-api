@@ -16,7 +16,7 @@ const pool = new Pool({
 
 // Wrap pool.query to track performance
 const originalQuery = pool.query.bind(pool);
-pool.query = async function (...args) {
+pool.query = async (...args) => {
   const start = Date.now();
   try {
     const result = await originalQuery(...args);

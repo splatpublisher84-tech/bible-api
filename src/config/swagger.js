@@ -4,7 +4,7 @@ const swaggerSpec = {
     title: 'Bible API',
     version: '1.0.0',
     description:
-      'REST API cung cấp dữ liệu Kinh Thánh từ PostgreSQL. Hỗ trợ nhiều bản dịch, tên sách đa ngôn ngữ (Anh/Việt), tìm kiếm toàn văn, và tra cứu linh hoạt theo tham chiếu. Hiện tại có 2 bản dịch: Vietnamese Cadman 1934 và King James Version (KJV) với Strong\'s Concordance.',
+      "REST API cung cấp dữ liệu Kinh Thánh từ PostgreSQL. Hỗ trợ nhiều bản dịch, tên sách đa ngôn ngữ (Anh/Việt), tìm kiếm toàn văn, và tra cứu linh hoạt theo tham chiếu. Hiện tại có 2 bản dịch: Vietnamese Cadman 1934 và King James Version (KJV) với Strong's Concordance.",
   },
   servers: [{ url: '/api', description: 'API base path' }],
   paths: {
@@ -13,11 +13,10 @@ const swaggerSpec = {
         tags: ['Translations'],
         summary: 'Lấy danh sách các bản dịch Kinh Thánh',
         description:
-          'Trả về danh sách tất cả các bản dịch Kinh Thánh hiện có trong hệ thống. Mỗi bản dịch bao gồm thông tin như tên, ngôn ngữ, năm xuất bản, và trạng thái bản quyền (public domain). Hiện tại API hỗ trợ bản dịch tiếng Việt Cadman 1934 và King James Version (KJV) có tích hợp số Strong\'s Concordance để tra cứu nguyên ngữ Hebrew/Greek. Sử dụng endpoint này để hiển thị danh sách bản dịch cho người dùng chọn trước khi đọc Kinh Thánh.',
+          "Trả về danh sách tất cả các bản dịch Kinh Thánh hiện có trong hệ thống. Mỗi bản dịch bao gồm thông tin như tên, ngôn ngữ, năm xuất bản, và trạng thái bản quyền (public domain). Hiện tại API hỗ trợ bản dịch tiếng Việt Cadman 1934 và King James Version (KJV) có tích hợp số Strong's Concordance để tra cứu nguyên ngữ Hebrew/Greek. Sử dụng endpoint này để hiển thị danh sách bản dịch cho người dùng chọn trước khi đọc Kinh Thánh.",
         responses: {
           200: {
-            description:
-              'Mảng các bản dịch. Mảng rỗng nếu chưa có bản dịch nào được import.',
+            description: 'Mảng các bản dịch. Mảng rỗng nếu chưa có bản dịch nào được import.',
             content: {
               'application/json': {
                 schema: {
@@ -47,8 +46,7 @@ const swaggerSpec = {
             in: 'path',
             required: true,
             schema: { type: 'string' },
-            description:
-              'Mã viết tắt của bản dịch (ví dụ: "cadman", "kjv_strongs")',
+            description: 'Mã viết tắt của bản dịch (ví dụ: "cadman", "kjv_strongs")',
           },
         ],
         responses: {
@@ -81,14 +79,12 @@ const swaggerSpec = {
             in: 'query',
             required: true,
             schema: { type: 'string' },
-            description:
-              'Mã viết tắt bản dịch. Tên sách sẽ trả về theo ngôn ngữ bản dịch này.',
+            description: 'Mã viết tắt bản dịch. Tên sách sẽ trả về theo ngôn ngữ bản dịch này.',
           },
         ],
         responses: {
           200: {
-            description:
-              'Mảng 66 sách, sắp xếp từ Sáng Thế Ký (id=1) đến Khải Huyền (id=66)',
+            description: 'Mảng 66 sách, sắp xếp từ Sáng Thế Ký (id=1) đến Khải Huyền (id=66)',
             content: {
               'application/json': {
                 schema: {
@@ -127,8 +123,7 @@ const swaggerSpec = {
             in: 'query',
             required: true,
             schema: { type: 'string' },
-            description:
-              'Mã viết tắt bản dịch. Số câu mỗi chương có thể khác nhau tùy bản dịch.',
+            description: 'Mã viết tắt bản dịch. Số câu mỗi chương có thể khác nhau tùy bản dịch.',
           },
         ],
         responses: {
@@ -180,8 +175,7 @@ const swaggerSpec = {
             in: 'path',
             required: true,
             schema: { type: 'integer', minimum: 1 },
-            description:
-              'Số chương, bắt đầu từ 1. Phải nằm trong phạm vi hợp lệ của sách đã chọn.',
+            description: 'Số chương, bắt đầu từ 1. Phải nằm trong phạm vi hợp lệ của sách đã chọn.',
           },
         ],
         responses: {
@@ -238,8 +232,7 @@ const swaggerSpec = {
             in: 'path',
             required: true,
             schema: { type: 'integer', minimum: 1 },
-            description:
-              'Số câu, bắt đầu từ 1. Phải nằm trong phạm vi hợp lệ của chương đã chọn.',
+            description: 'Số câu, bắt đầu từ 1. Phải nằm trong phạm vi hợp lệ của chương đã chọn.',
           },
         ],
         responses: {
@@ -271,15 +264,13 @@ const swaggerSpec = {
             name: 'date',
             in: 'query',
             schema: { type: 'string', format: 'date', example: '2026-04-11' },
-            description:
-              'Ngày cần lấy câu gốc, định dạng YYYY-MM-DD. Mặc định là ngày hôm nay.',
+            description: 'Ngày cần lấy câu gốc, định dạng YYYY-MM-DD. Mặc định là ngày hôm nay.',
           },
           {
             name: 'translation',
             in: 'query',
             schema: { type: 'string', example: 'kjv_strongs' },
-            description:
-              'Mã viết tắt bản dịch cho câu gốc. Mặc định: "kjv_strongs".',
+            description: 'Mã viết tắt bản dịch cho câu gốc. Mặc định: "kjv_strongs".',
           },
         ],
         responses: {
@@ -313,8 +304,7 @@ const swaggerSpec = {
             in: 'query',
             required: true,
             schema: { type: 'string', minLength: 1 },
-            description:
-              'Từ khóa hoặc cụm từ tìm kiếm. Ví dụ: "love", "faith", "tình yêu thương"',
+            description: 'Từ khóa hoặc cụm từ tìm kiếm. Ví dụ: "love", "faith", "tình yêu thương"',
           },
           {
             name: 'translation',
@@ -328,8 +318,7 @@ const swaggerSpec = {
             name: 'limit',
             in: 'query',
             schema: { type: 'integer', minimum: 1, maximum: 100, default: 20 },
-            description:
-              'Số kết quả tối đa mỗi trang. Mặc định: 20, tối đa: 100.',
+            description: 'Số kết quả tối đa mỗi trang. Mặc định: 20, tối đa: 100.',
           },
           {
             name: 'offset',
@@ -341,8 +330,7 @@ const swaggerSpec = {
         ],
         responses: {
           200: {
-            description:
-              'Kết quả tìm kiếm kèm thông tin phân trang. Mảng rỗng nếu không tìm thấy.',
+            description: 'Kết quả tìm kiếm kèm thông tin phân trang. Mảng rỗng nếu không tìm thấy.',
             content: {
               'application/json': {
                 schema: {
@@ -374,8 +362,7 @@ const swaggerSpec = {
           abbr: {
             type: 'string',
             example: 'cadman',
-            description:
-              'Mã viết tắt duy nhất, dùng trong các endpoint khác',
+            description: 'Mã viết tắt duy nhất, dùng trong các endpoint khác',
           },
           name: {
             type: 'string',
@@ -389,8 +376,7 @@ const swaggerSpec = {
           },
           description: {
             type: 'string',
-            description:
-              'Mô tả bản dịch: lịch sử, đặc điểm dịch thuật, ghi chú',
+            description: 'Mô tả bản dịch: lịch sử, đặc điểm dịch thuật, ghi chú',
           },
           year: {
             type: 'integer',
@@ -459,8 +445,7 @@ const swaggerSpec = {
           },
           total_verses: {
             type: 'integer',
-            description:
-              'Tổng số câu trong chương. Có thể khác nhau giữa các bản dịch.',
+            description: 'Tổng số câu trong chương. Có thể khác nhau giữa các bản dịch.',
           },
         },
       },
@@ -485,8 +470,7 @@ const swaggerSpec = {
         properties: {
           book_id: {
             type: 'integer',
-            description:
-              'ID sách chứa kết quả (1-66). Dùng để nhóm hoặc lọc kết quả theo sách.',
+            description: 'ID sách chứa kết quả (1-66). Dùng để nhóm hoặc lọc kết quả theo sách.',
           },
           book_name: {
             type: 'string',
@@ -515,8 +499,7 @@ const swaggerSpec = {
             type: 'string',
             format: 'date',
             example: '2026-04-11',
-            description:
-              'Ngày tương ứng câu gốc (YYYY-MM-DD). Cùng ngày luôn trả về cùng câu gốc.',
+            description: 'Ngày tương ứng câu gốc (YYYY-MM-DD). Cùng ngày luôn trả về cùng câu gốc.',
           },
           translation: {
             type: 'string',
@@ -593,13 +576,11 @@ const swaggerSpec = {
           },
           limit: {
             type: 'integer',
-            description:
-              'Số kết quả tối đa trong response hiện tại',
+            description: 'Số kết quả tối đa trong response hiện tại',
           },
           offset: {
             type: 'integer',
-            description:
-              'Vị trí bắt đầu trang hiện tại (từ 0). Trang tiếp theo: offset + limit',
+            description: 'Vị trí bắt đầu trang hiện tại (từ 0). Trang tiếp theo: offset + limit',
           },
         },
       },

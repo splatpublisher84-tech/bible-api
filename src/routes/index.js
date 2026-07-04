@@ -17,11 +17,15 @@ router.use('/translations', cache(86400), translationRoutes);
 router.use('/books', cache(86400), bookRoutes);
 router.use('/verses', cache(86400), verseRoutes);
 
-router.get('/votd',
+router.get(
+  '/votd',
   cache(86400),
   validate({
     query: z.object({
-      date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+      date: z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/)
+        .optional(),
       translation: z.string().min(1).optional(),
     }),
   }),
@@ -37,7 +41,8 @@ router.get('/metrics', (req, res) => {
   res.json({ ...getMetrics(), system: getSystemMetrics() });
 });
 
-router.get('/search',
+router.get(
+  '/search',
   cache(300),
   validate({
     query: z.object({
