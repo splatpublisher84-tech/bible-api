@@ -1,6 +1,8 @@
+import './tracing'; // PHẢI đầu tiên — init OpenTelemetry trước mọi import khác
 import 'reflect-metadata';
 import { join } from 'node:path';
 import helmet from '@fastify/helmet';
+import { FastifyOtelInstrumentation } from '@fastify/otel';
 import fastifyStatic from '@fastify/static';
 import { RequestMethod } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
@@ -18,6 +20,13 @@ async function bootstrap() {
   });
 
   app.useLogger(app.get(Logger));
+
+  // OTel: instrumentation route-level cho Fastify (auto-instrumentations-node đã bỏ fastify từ 2026).
+  // http + pg spans do NodeSDK trong tracing.ts lo; cái này thêm span theo route.
+  if (process.env.OTEL_ENABLED === 'true' || process.env.OTEL_EXPORTER_OTLP_ENDPOINT) {
+    const otel = new FastifyOtelInstrumentation({ recordExceptions: true });
+    await app.register(otel.plugin());
+  }
 
   // Security headers. CSP nới cho swagger-ui; /demo & /dashboard tự set CSP riêng chặt hơn.
   await app.register(helmet, {
