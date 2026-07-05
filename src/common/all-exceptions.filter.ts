@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Logger,
 } from '@nestjs/common';
+import * as Sentry from '@sentry/nestjs';
 import type { FastifyReply } from 'fastify';
 import { ZodValidationException } from 'nestjs-zod';
 import type { ZodError } from 'zod';
@@ -41,6 +42,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
       return reply.status(status).send({ error: message });
     }
 
+    // Chỉ báo lỗi 500 THẬT lên Sentry (no-op nếu chưa init) — không spam 4xx/validation.
+    Sentry.captureException(exception);
     this.logger.error(
       exception instanceof Error ? (exception.stack ?? exception.message) : String(exception)
     );

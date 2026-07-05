@@ -41,6 +41,7 @@
     "@opentelemetry/auto-instrumentations-node": "^0.78.0",
     "@opentelemetry/exporter-trace-otlp-http": "^0.220.0",
     "@opentelemetry/sdk-node": "^0.220.0",
+    "@sentry/nestjs": "^10.63.0",
     "cache-manager": "^7.2.9",
     "cacheable": "^2.5.0",
     "dotenv": "^17.2.3",

@@ -1,4 +1,5 @@
-import './tracing'; // PHẢI đầu tiên — init OpenTelemetry trước mọi import khác
+import './instrument'; // Sentry (env-gated) — PHẢI trước mọi import để auto-instrument
+import './tracing'; // OpenTelemetry (env-gated) — init trước mọi import khác
 import 'reflect-metadata';
 import { join } from 'node:path';
 import helmet from '@fastify/helmet';
