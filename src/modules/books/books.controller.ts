@@ -1,7 +1,9 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
+import { CacheControl } from '../../common/cache-control.decorator';
 import { BooksQueryDto, ChaptersParamDto } from './books.dto';
 import { BooksService } from './books.service';
 
+@CacheControl(86400)
 @Controller('books')
 export class BooksController {
   constructor(private readonly service: BooksService) {}

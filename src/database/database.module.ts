@@ -2,6 +2,7 @@ import { Global, Inject, Logger, Module, type OnModuleDestroy } from '@nestjs/co
 import { ConfigService } from '@nestjs/config';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
+import { trackQuery } from '../metrics/metrics.store';
 import { DRIZZLE } from './drizzle.provider';
 import { schema } from './schema';
 
@@ -31,6 +32,23 @@ const POOL = Symbol('PG_POOL');
         pool.on('error', (err) => {
           new Logger('PgPool').error(`Unexpected idle client error: ${err.message}`);
         });
+
+        // Đo thời gian MỌI query (drizzle đi qua pool.query) -> feed metrics (như bản cũ)
+        const originalQuery = pool.query.bind(pool);
+        pool.query = ((...args: unknown[]) => {
+          const start = Date.now();
+          return (originalQuery as (...a: unknown[]) => Promise<unknown>)(...args).then(
+            (res) => {
+              trackQuery(Date.now() - start, false);
+              return res;
+            },
+            (err) => {
+              trackQuery(Date.now() - start, true);
+              throw err;
+            }
+          );
+        }) as typeof pool.query;
+
         return pool;
       },
     },

@@ -1,7 +1,9 @@
 import { Controller, Get, Param } from '@nestjs/common';
+import { CacheControl } from '../../common/cache-control.decorator';
 import { ChapterParamsDto, VerseParamsDto } from './verses.dto';
 import { VersesService } from './verses.service';
 
+@CacheControl(86400)
 @Controller('verses')
 export class VersesController {
   constructor(private readonly service: VersesService) {}
