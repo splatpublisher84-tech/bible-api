@@ -4,14 +4,12 @@ import { join } from 'node:path';
 import helmet from '@fastify/helmet';
 import { FastifyOtelInstrumentation } from '@fastify/otel';
 import fastifyStatic from '@fastify/static';
-import { RequestMethod } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { FastifyAdapter, type NestFastifyApplication } from '@nestjs/platform-fastify';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { Logger } from 'nestjs-pino';
-import { ZodValidationPipe } from 'nestjs-zod';
 import { AppModule } from './app.module';
-import { AllExceptionsFilter } from './common/all-exceptions.filter';
+import { configureApp } from './app.setup';
 import { recordRequest } from './metrics/metrics.store';
 
 async function bootstrap() {
@@ -47,17 +45,7 @@ async function bootstrap() {
     decorateReply: false,
   });
 
-  app.setGlobalPrefix('api', {
-    exclude: [
-      { path: '/', method: RequestMethod.GET },
-      { path: 'health', method: RequestMethod.GET },
-      { path: 'demo', method: RequestMethod.GET },
-      { path: 'dashboard', method: RequestMethod.GET },
-    ],
-  });
-
-  app.useGlobalPipes(new ZodValidationPipe());
-  app.useGlobalFilters(new AllExceptionsFilter());
+  configureApp(app);
   app.enableShutdownHooks();
 
   // Metrics: ghi nhận mỗi response (status + duration cuối) qua Fastify onResponse hook
