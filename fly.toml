@@ -6,7 +6,15 @@
 app = 'bible-api-ibsnxg'
 primary_region = 'iad'
 
+# Swap: RSS spike (đỉnh ~183MB đo được) không bị OOM-kill trên VM 256MB.
+# Đổi chút latency (disk) lấy an toàn — hợp API traffic thấp.
+swap_size_mb = 512
+
 [build]
+
+[env]
+  # Ép V8 GC sớm, giữ heap gọn cho container nhỏ.
+  NODE_OPTIONS = '--max-old-space-size=200'
 
 [http_service]
   internal_port = 3000
