@@ -6,8 +6,8 @@
 Dữ liệu Kinh Thánh gần như tĩnh. App chạy trên VM Fly.io chỉ 256MB RAM.
 
 ## Quyết định
-Middleware `cache` (`src/middlewares/cache.js`) **chỉ đặt header `Cache-Control`**
-(24h cho data tĩnh, 5m cho search). KHÔNG có lớp cache in-memory (Redis/LRU).
+_(Quyết định gốc, bản Express)_ Middleware `cache` (`src/middlewares/cache.js` — nay đã gỡ)
+**chỉ đặt header `Cache-Control`** (24h data tĩnh, 5m search). KHÔNG có cache in-memory (Redis/LRU).
 
 ## Hệ quả
 - ➕ Không thêm hạ tầng; browser/CDN lo việc cache.
