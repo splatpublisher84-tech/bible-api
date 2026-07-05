@@ -1,6 +1,13 @@
 # Dependencies
 node_modules/
 
+# Build output (TypeScript/NestJS)
+dist/
+*.tsbuildinfo
+
+# Drizzle generated migrations/introspection
+drizzle/
+
 # Environment variables
 .env
 .env.local
@@ -16,5 +23,5 @@ yarn-debug.log*
 .vscode/
 .idea/
 
-# Misc
-package.jsonU
+# Claude Code (file cá nhân, không commit)
+.claude/settings.local.json
