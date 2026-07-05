@@ -22,6 +22,11 @@ jobs:
       - run: npm run check
       - run: npm run typecheck
       - run: npm run build
+      # Bảo mật: chặn nếu prod deps có lỗ hổng high/critical (dev-tooling chỉ báo cáo)
+      - name: Security audit (production deps)
+        run: npm audit --omit=dev --audit-level=high
+      - name: Audit report (all — informational)
+        run: npm audit || true
 
   test:
     name: Integration tests (PostgreSQL)
