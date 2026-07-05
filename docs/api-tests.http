@@ -1,0 +1,28 @@
+### File này dùng với extension "REST Client" (humao.rest-client).
+### Cách dùng: bấm chữ "Send Request" màu xám hiện phía trên mỗi request.
+### Kết quả trả về hiện ở cửa sổ bên phải. Đổi @baseUrl để test local hay production.
+
+# Local (chạy `npm run dev` trước). Production: đổi sang dòng dưới.
+@baseUrl = http://localhost:3000
+# @baseUrl = https://bible-api-ibsnxg.fly.dev
+
+### Health check
+GET {{baseUrl}}/health
+
+### Trạng thái + thống kê dữ liệu
+GET {{baseUrl}}/api/status
+
+### Danh sách bản dịch
+GET {{baseUrl}}/api/translations
+
+### Danh sách sách (theo bản dịch, vd tiếng Việt id=1)
+GET {{baseUrl}}/api/books?translation=1
+
+### Đọc câu: Sáng thế ký 1:1 (bản Cadman tiếng Việt)
+GET {{baseUrl}}/api/verses/1/1/1/1
+
+### Tìm kiếm toàn văn
+GET {{baseUrl}}/api/search?q=love&translation=2&limit=5
+
+### Verse of the Day
+GET {{baseUrl}}/api/votd?translation=1

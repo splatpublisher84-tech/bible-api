@@ -26,7 +26,7 @@ flyctl deploy
 ### 4. Post-deploy verification (run in parallel)
 ```bash
 curl -s https://bible-api-ibsnxg.fly.dev/health | jq
-curl -s 'https://bible-api-ibsnxg.fly.dev/api/verses/kjv/43/3/16' | jq
+curl -s 'https://bible-api-ibsnxg.fly.dev/api/verses/kjv_strongs/43/3/16' | jq
 ```
 
 ### 5. Report results
