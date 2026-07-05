@@ -27,12 +27,19 @@ node scripts/convert-module-to-pg.js <module_dir> <translation_id> <output.sql>
 
 ## Setup lần đầu (máy mới)
 
-Test là **integration test**, cần DB thật có sẵn dữ liệu, KHÔNG chạy được với DB rỗng.
-1. `docker-compose up -d`
-2. Nạp lần lượt theo thứ tự (file tự ghi rõ thứ tự trong comment đầu file):
-   `sql/001_schema.sql` → `002_seed.sql` → `003_data_cadman.sql`
-   → `004_data_kjv_strongs.sql` → `005_book_names_temp.sql` → `006_votd.sql`
-3. `npm test`
+Test là **integration test**, cần DB có dữ liệu.
+1. `cp .env.example .env`
+2. `npm ci`
+3. `docker compose up -d` — Postgres **tự nạp** `sql/001..006` (schema+seed+data+votd) khi volume
+   rỗng (mount `/docker-entrypoint-initdb.d`). Chờ vài giây tới khi có dữ liệu (~62k câu).
+4. `npm run build && npm test`
+
+**DB scripts:**
+- `npm run db:reset` — xoá volume + dựng lại DB sạch (auto-seed từ `sql/`).
+- `npm run db:seed` — nạp `sql/` vào DB đang chạy (thủ công, DB phải rỗng).
+
+Các file `sql/` đã verify: nạp vào DB sạch ra đúng **2 bản dịch / 66 sách / 62.204 câu / 510 votd**
+(+ GIN index FTS). Đây là nguồn seed/backup của schema + dữ liệu tham chiếu.
 
 ## Kiến trúc: Module → Controller → Service → Repository (Drizzle)
 
