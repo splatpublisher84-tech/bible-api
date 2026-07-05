@@ -21,7 +21,7 @@ jobs:
       name: production
       url: https://bible-api-ibsnxg.fly.dev
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: superfly/flyctl-actions/setup-flyctl@master
 
