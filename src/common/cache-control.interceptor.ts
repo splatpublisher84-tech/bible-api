@@ -33,7 +33,10 @@ export class CacheControlInterceptor implements NestInterceptor {
     const reply = http.getResponse<FastifyReply>();
     reply.header('Cache-Control', `public, max-age=${seconds}`);
 
-    const key = `http:${req.url}`;
+    // Scope key theo ngày UTC: response phụ thuộc thời gian (vd /votd mặc định "today")
+    // tự hết hạn qua nửa đêm UTC thay vì kẹt cả TTL 24h -> giữ đúng parity với bản cũ.
+    const utcDay = new Date().toISOString().slice(0, 10);
+    const key = `http:${utcDay}:${req.url}`;
     const cached = await this.cache.get(key);
     if (cached !== undefined && cached !== null) return of(cached);
 

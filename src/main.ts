@@ -26,17 +26,9 @@ async function bootstrap() {
     await app.register(otel.plugin());
   }
 
-  // Security headers. CSP nới cho swagger-ui; /demo & /dashboard tự set CSP riêng chặt hơn.
-  await app.register(helmet, {
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'"],
-        styleSrc: ["'self'", "'unsafe-inline'", 'https:'],
-        imgSrc: ["'self'", 'data:', 'https:'],
-      },
-    },
-  });
+  // Security headers — helmet mặc định (CSP chặt như bản Express cũ = parity + bảo mật tốt hơn).
+  // /demo & /dashboard tự override CSP trong handler; /api trả JSON nên CSP không ảnh hưởng.
+  await app.register(helmet);
 
   // Static assets -> dist/public (dashboard css/js)
   await app.register(fastifyStatic, {
