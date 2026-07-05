@@ -1,0 +1,52 @@
+name: Deploy (Fly.io)
+
+# Deploy CHỦ ĐỘNG: chỉ chạy khi push tag v* (release) hoặc bấm tay (workflow_dispatch).
+# KHÔNG deploy mỗi lần push main — tránh đẩy nhầm lên prod.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch: {}
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to Fly.io
+    runs-on: ubuntu-latest
+    # Gate: nếu cấu hình "Required reviewers" cho environment 'production' trong
+    # Settings → Environments, job sẽ CHỜ bạn duyệt tay trước khi chạy.
+    environment:
+      name: production
+      url: https://bible-api-ibsnxg.fly.dev
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      # (Khi có thay đổi schema về sau) chạy migration TÁCH BIỆT ở đây, TRƯỚC deploy:
+      #   - run: flyctl ssh console -C "node -e '...'"   # hoặc drizzle-kit migrate qua connection prod
+      # Hiện schema không đổi nên bỏ qua. Nhớ baseline 0000 một lần trước khi bật.
+
+      - name: Deploy
+        run: flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      - name: Smoke test (live)
+        run: |
+          set -euo pipefail
+          BASE=https://bible-api-ibsnxg.fly.dev
+          curl -fsS "$BASE/health" | grep -q '"OK"'
+          curl -fsS "$BASE/api/status" >/dev/null
+          curl -fsS "$BASE/api/verses/kjv_strongs/43/3/16" | grep -q '"text"'
+          echo "✅ smoke test passed"
+
+      - name: Rollback hint (nếu fail)
+        if: failure()
+        run: |
+          echo "::warning::Deploy/smoke thất bại. Fly health-check tự rollback bản gãy."
+          echo "Rollback tay nếu cần:  flyctl releases -a bible-api-ibsnxg  →  flyctl deploy --image <prev>"
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

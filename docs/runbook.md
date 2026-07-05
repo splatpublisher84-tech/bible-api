@@ -64,6 +64,22 @@ curl -s 'https://bible-api-ibsnxg.fly.dev/api/verses/kjv_strongs/43/3/16' | jq
 > ⚠️ **Migration Drizzle:** prod đã có schema → **đừng** `drizzle-kit migrate` mù (0000_init đụng bảng).
 > Baseline `0000` một lần (đánh dấu applied trong `drizzle.__drizzle_migrations`) rồi mới migrate bản mới.
 
+### 4.1 Deploy tự động (GitHub Actions — tag-based)
+Workflow `.github/workflows/deploy.yml`: chạy khi **push tag `v*`** hoặc bấm tay (workflow_dispatch).
+Không deploy mỗi lần push `main`.
+
+**Setup 1 lần:**
+1. Tạo Fly token: `flyctl tokens create deploy -a bible-api-ibsnxg` → copy.
+2. GitHub → Settings → Secrets and variables → Actions → thêm secret **`FLY_API_TOKEN`**.
+3. (Khuyên) GitHub → Settings → Environments → tạo **`production`** → bật **Required reviewers** (thêm chính bạn) = nút duyệt tay trước khi deploy.
+
+**Deploy 1 phiên bản:**
+```bash
+git tag v1.0.0 && git push origin v1.0.0    # → workflow chạy: (duyệt) → flyctl deploy → smoke test
+```
+- `fly.toml` có health-check `/health` → Fly **tự rollback** nếu máy mới không healthy.
+- Smoke fail → job đỏ; rollback tay: `flyctl releases -a bible-api-ibsnxg` → `flyctl deploy --image <prev>`.
+
 ## 5. Rollback
 ```bash
 flyctl releases list
