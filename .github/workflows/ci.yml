@@ -58,13 +58,10 @@ jobs:
           HUSKY: 0
       - name: Install psql client
         run: sudo apt-get update && sudo apt-get install -y postgresql-client
-      - name: Load schema + data
+      - name: Migrate schema (drizzle-kit)
+        run: npx drizzle-kit migrate
+      - name: Seed data
         env:
           PGPASSWORD: bible_password_123
-        run: |
-          for f in sql/001_schema.sql sql/002_seed.sql sql/003_data_cadman.sql \
-                   sql/004_data_kjv_strongs.sql sql/005_book_names_temp.sql sql/006_votd.sql; do
-            echo "Loading $f"
-            psql -h localhost -U bible_user -d bible_db -v ON_ERROR_STOP=1 -q -f "$f"
-          done
+        run: psql -h localhost -U bible_user -d bible_db -v ON_ERROR_STOP=1 -q -f sql/seed.sql
       - run: npm test

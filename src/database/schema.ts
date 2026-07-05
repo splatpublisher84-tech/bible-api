@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import {
   boolean,
   index,
@@ -74,7 +75,8 @@ export const verses = pgTable(
     unique().on(t.translationId, t.bookId, t.chapter, t.verse),
     index('idx_verses_translation').on(t.translationId),
     index('idx_verses_book_chapter').on(t.bookId, t.chapter),
-    // GIN idx_verses_text_search USING to_tsvector('simple', text) — biểu thức, khai báo ở SQL gốc.
+    // GIN full-text index trên biểu thức to_tsvector('simple', text) — dùng cho /api/search
+    index('idx_verses_text_search').using('gin', sql`to_tsvector('simple', ${t.text})`),
   ]
 );
 
@@ -121,7 +123,10 @@ export const votdVerses = pgTable(
     isActive: boolean('is_active').notNull().default(true),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [unique().on(t.bookId, t.chapter, t.verseStart)]
+  (t) => [
+    unique().on(t.bookId, t.chapter, t.verseStart),
+    index('idx_votd_verses_theme').on(t.theme).where(sql`${t.isActive} = true`),
+  ]
 );
 
 export const votdCalendar = pgTable(
@@ -136,7 +141,10 @@ export const votdCalendar = pgTable(
     isActive: boolean('is_active').notNull().default(true),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [unique().on(t.dayOfYear, t.year)]
+  (t) => [
+    unique().on(t.dayOfYear, t.year),
+    index('idx_votd_calendar_day').on(t.dayOfYear).where(sql`${t.isActive} = true`),
+  ]
 );
 
 export const schema = {

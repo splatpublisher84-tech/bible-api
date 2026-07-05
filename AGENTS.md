@@ -30,16 +30,23 @@ node scripts/convert-module-to-pg.js <module_dir> <translation_id> <output.sql>
 Test là **integration test**, cần DB có dữ liệu.
 1. `cp .env.example .env`
 2. `npm ci`
-3. `docker compose up -d` — Postgres **tự nạp** `sql/001..006` (schema+seed+data+votd) khi volume
-   rỗng (mount `/docker-entrypoint-initdb.d`). Chờ vài giây tới khi có dữ liệu (~62k câu).
+3. `npm run db:reset` — down -v + up + `drizzle-kit migrate` (schema) + seed data (~62k câu)
 4. `npm run build && npm test`
 
 **DB scripts:**
-- `npm run db:reset` — xoá volume + dựng lại DB sạch (auto-seed từ `sql/`).
-- `npm run db:seed` — nạp `sql/` vào DB đang chạy (thủ công, DB phải rỗng).
+- `npm run db:up` — bật Postgres (rỗng)
+- `npm run db:migrate` — `drizzle-kit migrate`: tạo schema từ `drizzle/` (nguồn: `schema.ts`)
+- `npm run db:seed` — nạp `sql/seed.sql` (data) vào DB đang chạy
+- `npm run db:reset` — dựng lại từ đầu (migrate + seed)
 
-Các file `sql/` đã verify: nạp vào DB sạch ra đúng **2 bản dịch / 66 sách / 62.204 câu / 510 votd**
-(+ GIN index FTS). Đây là nguồn seed/backup của schema + dữ liệu tham chiếu.
+### Schema & data (drizzle-kit làm chủ)
+- **Schema = `src/database/schema.ts`** (nguồn sự thật). Đổi schema: sửa file → `npx drizzle-kit generate`
+  → commit migration mới trong `drizzle/`. `drizzle/` **được commit** (schema cho CI/deploy).
+- **Data = `sql/seed.sql`** (pg_dump --data-only: 2 bản dịch / 66 sách / **62.204 câu** / 510 votd,
+  đã fix sequence). Verified: `migrate` + `seed` vào DB sạch ra đúng số liệu + GIN FTS index.
+- ⚠️ **Prod (DB đã có sẵn schema+data):** ĐỪNG chạy `drizzle-kit migrate` mù — `0000_init` sẽ đụng
+  bảng đã tồn tại. Baseline 1 lần: đánh dấu `0000` đã áp dụng trong `__drizzle_migrations` rồi mới
+  migrate các bản sau.
 
 ## Kiến trúc: Module → Controller → Service → Repository (Drizzle)
 
@@ -54,7 +61,8 @@ Request → helmet/CORS/throttler/pino → Zod validate (nestjs-zod pipe)
 | `src/main.ts` | Bootstrap NestFastify: helmet, CORS, static, swagger, OTel hook, metrics hook |
 | `src/app.setup.ts` | `configureApp()` — global prefix `/api`, ZodValidationPipe, exception filter (dùng chung main + test) |
 | `src/app.module.ts` | Root module: Config, Logger(pino), Throttler, Cache(Keyv), Database + các module |
-| `src/database/` | schema.ts (Drizzle, map DB có sẵn), database.module.ts (pool + wrap query đo metrics) |
+| `src/database/` | schema.ts (**nguồn sự thật schema**, drizzle-kit generate → `drizzle/`), database.module.ts (pool + wrap query đo metrics) |
+| `drizzle/` | Migrations sinh từ schema.ts (đã commit). `sql/seed.sql` = data seed |
 | `src/modules/<res>/` | Mỗi resource: `*.repository.ts` (Drizzle SQL) + `*.service.ts` (logic) + `*.dto.ts` (Zod) + `*.controller.ts` |
 | `src/common/` | AllExceptionsFilter (format lỗi cũ), CacheControl decorator + interceptor |
 | `src/metrics/` | metrics.store.ts (in-memory request/DB/memory tracking), /api/metrics |

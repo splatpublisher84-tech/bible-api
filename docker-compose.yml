@@ -13,9 +13,8 @@ services:
       POSTGRES_DB: bible_db
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      # Auto-seed khi volume RỖNG (máy mới): postgres chạy các file *.sql theo thứ tự tên.
-      # sql/001..006 -> schema + seed + data + votd. Lần sau (volume đã có data) sẽ bỏ qua.
-      - ./sql:/docker-entrypoint-initdb.d:ro
+      # Schema do drizzle-kit migrate quản lý; seed data qua `npm run db:seed`.
+      # Dựng DB đầy đủ 1 lệnh: `npm run db:reset`.
 
 volumes:
   postgres_data:

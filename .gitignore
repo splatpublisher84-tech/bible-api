@@ -5,8 +5,7 @@ node_modules/
 dist/
 *.tsbuildinfo
 
-# Drizzle generated migrations/introspection
-drizzle/
+# Drizzle: migrations ĐƯỢC commit (nguồn schema cho CI/deploy). Chỉ bỏ qua meta cache nếu cần.
 
 # Environment variables
 .env
