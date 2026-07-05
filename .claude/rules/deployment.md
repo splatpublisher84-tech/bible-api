@@ -11,10 +11,16 @@ flyctl deploy
 ```
 
 ## Pre-deploy Checklist
-1. `npm test` — all tests must pass
-2. `git status` — no uncommitted changes
-3. Check for `.env` secrets NOT in code
-4. Commit and push to GitHub first
+1. `npm run check` + `npm run typecheck` — lint/format + types sạch
+2. `npm run build` — TS compile được (`nest build` → `dist/`)
+3. `npm test` — all tests pass (cần DB)
+4. `git status` — no uncommitted changes; commit + push GitHub trước
+5. `.env` secrets KHÔNG nằm trong code
+
+## Database migrations (Drizzle)
+- Prod **đã có schema+data** → **ĐỪNG** `drizzle-kit migrate` mù (migration `0000_init` sẽ đụng bảng đã tồn tại).
+- Lần đầu: **baseline** — đánh dấu `0000` đã áp dụng trong `drizzle.__drizzle_migrations`, rồi chỉ migrate các bản mới sau này.
+- Dockerfile là multi-stage: cài dev deps → `npm run build` → chạy `node dist/main` (không tự migrate).
 
 ## Post-deploy Verification
 ```bash

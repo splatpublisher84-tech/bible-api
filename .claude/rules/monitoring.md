@@ -16,9 +16,11 @@
 - `system.memory[]`: heap/RSS samples (every 5min)
 
 ## Tracking Components
-- `src/middlewares/requestTracker.js` — HTTP request tracking (client vs internal)
-- `src/middlewares/systemTracker.js` — DB query + memory tracking
-- `src/config/database.js` — pool.query wrapper for auto DB tracking
+- `src/metrics/metrics.store.ts` — in-memory request + DB + memory tracking (giữ đúng shape cũ; timer `unref`)
+- `src/main.ts` — Fastify `onResponse` hook → `recordRequest` (status/duration cuối cùng, phân loại client/internal)
+- `src/database/database.module.ts` — `pool.query` wrapped → `trackQuery` (đo mọi query)
+- `src/metrics/metrics.controller.ts` — `GET /api/metrics` (kiểm `?key=`)
+- Dashboard served qua `src/views/views.controller.ts`; assets qua `@fastify/static` (`/static`)
 
 ## Adding New Charts
 1. Add `<canvas id="newCanvas">` in dashboard.html
