@@ -46,6 +46,13 @@ async function bootstrap() {
   });
 
   configureApp(app);
+
+  // CORS GET-only (khớp bản cũ): origin từ ALLOWED_ORIGINS hoặc '*'
+  app.enableCors({
+    origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : '*',
+    methods: ['GET'],
+  });
+
   app.enableShutdownHooks();
 
   // Metrics: ghi nhận mỗi response (status + duration cuối) qua Fastify onResponse hook

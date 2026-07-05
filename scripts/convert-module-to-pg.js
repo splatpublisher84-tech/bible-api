@@ -14,8 +14,8 @@
  *     sql/002_data_kjv_strongs.sql
  */
 
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 
 // ============================================================================
 // Parse command line arguments
@@ -23,19 +23,23 @@ const path = require('path');
 const args = process.argv.slice(2);
 
 if (args.length < 3) {
-    console.error('Su dung: node scripts/convert-module-to-pg.js <module_dir> <translation_id> <output.sql>');
-    console.error('');
-    console.error('Vi du:');
-    console.error('  node scripts/convert-module-to-pg.js ~/Downloads/kjv_strongs 2 sql/002_data_kjv_strongs.sql');
-    process.exit(1);
+  console.error(
+    'Su dung: node scripts/convert-module-to-pg.js <module_dir> <translation_id> <output.sql>'
+  );
+  console.error('');
+  console.error('Vi du:');
+  console.error(
+    '  node scripts/convert-module-to-pg.js ~/Downloads/kjv_strongs 2 sql/002_data_kjv_strongs.sql'
+  );
+  process.exit(1);
 }
 
 const [moduleDir, translationIdStr, outputFile] = args;
 const translationId = parseInt(translationIdStr, 10);
 
-if (isNaN(translationId)) {
-    console.error('Loi: translation_id phai la so nguyen');
-    process.exit(1);
+if (Number.isNaN(translationId)) {
+  console.error('Loi: translation_id phai la so nguyen');
+  process.exit(1);
 }
 
 // ============================================================================
@@ -43,8 +47,8 @@ if (isNaN(translationId)) {
 // ============================================================================
 const infoPath = path.join(moduleDir, 'info.json');
 if (!fs.existsSync(infoPath)) {
-    console.error(`Loi: Khong tim thay ${infoPath}`);
-    process.exit(1);
+  console.error(`Loi: Khong tim thay ${infoPath}`);
+  process.exit(1);
 }
 
 const info = JSON.parse(fs.readFileSync(infoPath, 'utf8'));
@@ -58,8 +62,8 @@ console.log(`Strong's: ${info.strongs ? 'Co' : 'Khong'}`);
 // ============================================================================
 const versesPath = path.join(moduleDir, 'verses.txt');
 if (!fs.existsSync(versesPath)) {
-    console.error(`Loi: Khong tim thay ${versesPath}`);
-    process.exit(1);
+  console.error(`Loi: Khong tim thay ${versesPath}`);
+  process.exit(1);
 }
 
 const content = fs.readFileSync(versesPath, 'utf8');
@@ -74,39 +78,39 @@ let count = 0;
 let skipped = 0;
 
 for (const line of lines) {
-    // Bo qua dong trong va dong comment/header
-    if (!line.trim() || line.startsWith('#')) continue;
+  // Bo qua dong trong va dong comment/header
+  if (!line.trim() || line.startsWith('#')) continue;
 
-    const parts = line.split(delimiter);
-    // Can it nhat 4 cot: book, chapter, verse, text
-    if (parts.length < 4) {
-        skipped++;
-        continue;
-    }
+  const parts = line.split(delimiter);
+  // Can it nhat 4 cot: book, chapter, verse, text
+  if (parts.length < 4) {
+    skipped++;
+    continue;
+  }
 
-    const book = parseInt(parts[0], 10);
-    const chapter = parseInt(parts[1], 10);
-    const verse = parseInt(parts[2], 10);
-    const text = parts[3];
+  const book = parseInt(parts[0], 10);
+  const chapter = parseInt(parts[1], 10);
+  const verse = parseInt(parts[2], 10);
+  const text = parts[3];
 
-    // Validate du lieu co ban
-    if (isNaN(book) || isNaN(chapter) || isNaN(verse) || !text) {
-        skipped++;
-        continue;
-    }
+  // Validate du lieu co ban
+  if (Number.isNaN(book) || Number.isNaN(chapter) || Number.isNaN(verse) || !text) {
+    skipped++;
+    continue;
+  }
 
-    // Escape single quotes cho PostgreSQL: ' -> ''
-    const escapedText = text.replace(/'/g, "''");
+  // Escape single quotes cho PostgreSQL: ' -> ''
+  const escapedText = text.replace(/'/g, "''");
 
-    pgInserts.push(`(${translationId}, ${book}, ${chapter}, ${verse}, '${escapedText}')`);
-    count++;
+  pgInserts.push(`(${translationId}, ${book}, ${chapter}, ${verse}, '${escapedText}')`);
+  count++;
 }
 
 console.log(`Da parse ${count} cau (bo qua ${skipped} dong)`);
 
 if (count === 0) {
-    console.error('Loi: Khong parse duoc cau nao. Kiem tra lai format file.');
-    process.exit(1);
+  console.error('Loi: Khong parse duoc cau nao. Kiem tra lai format file.');
+  process.exit(1);
 }
 
 // ============================================================================
@@ -128,23 +132,30 @@ outputLines.push('');
 
 // Insert translation metadata tu info.json
 const escapedName = info.name.replace(/'/g, "''");
-const escapedDesc = (info.description || '').replace(/<[^>]*>/g, '').replace(/'/g, "''").substring(0, 200);
-const year = parseInt(info.year) || null;
+const escapedDesc = (info.description || '')
+  .replace(/<[^>]*>/g, '')
+  .replace(/'/g, "''")
+  .substring(0, 200);
+const year = parseInt(info.year, 10) || null;
 const isPublicDomain = info.copyright === 0;
 const hasStrongs = info.strongs === 1;
 
 outputLines.push('-- Insert translation metadata');
-outputLines.push(`INSERT INTO translations (id, abbr, name, language, description, year, is_public_domain, has_strongs) VALUES`);
-outputLines.push(`    (${translationId}, '${info.module}', '${escapedName}', '${info.lang_short}', '${escapedDesc}', ${year}, ${isPublicDomain}, ${hasStrongs})`);
+outputLines.push(
+  `INSERT INTO translations (id, abbr, name, language, description, year, is_public_domain, has_strongs) VALUES`
+);
+outputLines.push(
+  `    (${translationId}, '${info.module}', '${escapedName}', '${info.lang_short}', '${escapedDesc}', ${year}, ${isPublicDomain}, ${hasStrongs})`
+);
 outputLines.push(`ON CONFLICT (id) DO NOTHING;`);
 outputLines.push('');
 
 // Insert verses theo batch
 for (let i = 0; i < pgInserts.length; i += batchSize) {
-    const batch = pgInserts.slice(i, i + batchSize);
-    outputLines.push('INSERT INTO verses (translation_id, book_id, chapter, verse, text) VALUES');
-    outputLines.push(batch.join(',\n') + ';');
-    outputLines.push('');
+  const batch = pgInserts.slice(i, i + batchSize);
+  outputLines.push('INSERT INTO verses (translation_id, book_id, chapter, verse, text) VALUES');
+  outputLines.push(`${batch.join(',\n')};`);
+  outputLines.push('');
 }
 
 // Tu dong tao du lieu chapter_info
@@ -155,7 +166,9 @@ outputLines.push(`FROM verses`);
 outputLines.push(`WHERE translation_id = ${translationId}`);
 outputLines.push(`GROUP BY translation_id, book_id, chapter`);
 outputLines.push(`ON CONFLICT (translation_id, book_id, chapter)`);
-outputLines.push(`DO UPDATE SET total_verses = GREATEST(chapter_info.total_verses, EXCLUDED.total_verses);`);
+outputLines.push(
+  `DO UPDATE SET total_verses = GREATEST(chapter_info.total_verses, EXCLUDED.total_verses);`
+);
 outputLines.push('');
 outputLines.push('COMMIT;');
 
@@ -164,7 +177,7 @@ outputLines.push('COMMIT;');
 // ============================================================================
 const outputDir = path.dirname(outputFile);
 if (outputDir && !fs.existsSync(outputDir)) {
-    fs.mkdirSync(outputDir, { recursive: true });
+  fs.mkdirSync(outputDir, { recursive: true });
 }
 
 fs.writeFileSync(outputFile, outputLines.join('\n'), 'utf8');

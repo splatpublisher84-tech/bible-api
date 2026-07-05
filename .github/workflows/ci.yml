@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  quality:
+    name: Lint · Typecheck · Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+        env:
+          HUSKY: 0
+      - run: npm run check
+      - run: npm run typecheck
+      - run: npm run build
+
+  test:
+    name: Integration tests (PostgreSQL)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: bible_user
+          POSTGRES_PASSWORD: bible_password_123
+          POSTGRES_DB: bible_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U bible_user -d bible_db"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      NODE_ENV: test
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_USER: bible_user
+      DB_PASSWORD: bible_password_123
+      DB_NAME: bible_db
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+        env:
+          HUSKY: 0
+      - name: Install psql client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - name: Load schema + data
+        env:
+          PGPASSWORD: bible_password_123
+        run: |
+          for f in sql/001_schema.sql sql/002_seed.sql sql/003_data_cadman.sql \
+                   sql/004_data_kjv_strongs.sql sql/005_book_names_temp.sql sql/006_votd.sql; do
+            echo "Loading $f"
+            psql -h localhost -U bible_user -d bible_db -v ON_ERROR_STOP=1 -q -f "$f"
+          done
+      - run: npm test
