@@ -119,3 +119,26 @@ votd `NULLS LAST` + hash fallback, Strong markup raw).
 - 🔴 **Code chết đã biết:** `votd_calendar` rỗng → VOTD luôn chọn theo hash (`hashDate()` trong `votd.controller.js`), nhánh calendar không bao giờ chạy. Bảng `book_aliases` không endpoint nào dùng.
 - 🟡 Strong's (`{G2316}`) nằm thô trong text KJV, API không parse — client tự xử.
 - 🟡 `METRICS_KEY` truyền qua URL (`?key=`) và nhúng trong HTML dashboard — lộ trong log/referrer. Cân nhắc chuyển sang header.
+
+<!-- BACKLOG.MD GUIDELINES START -->
+<CRITICAL_INSTRUCTION>
+
+## Backlog.md Workflow
+
+This project uses Backlog.md for task and project management.
+
+**For every user request in this project, run `backlog instructions overview` before answering or taking action.**
+
+Use the overview to decide whether to search, read, create, or update Backlog tasks.
+
+Use the detailed guides when needed:
+- `backlog instructions task-creation` for creating or splitting tasks
+- `backlog instructions task-execution` for planning and implementation workflow
+- `backlog instructions task-finalization` for completion and handoff
+
+Use `backlog <command> --help` before running unfamiliar commands. Help shows options, fields, and examples.
+
+Do not edit Backlog task, draft, document, decision, or milestone markdown files directly. Use the `backlog` CLI so metadata, relationships, and history stay consistent.
+
+</CRITICAL_INSTRUCTION>
+<!-- BACKLOG.MD GUIDELINES END -->
