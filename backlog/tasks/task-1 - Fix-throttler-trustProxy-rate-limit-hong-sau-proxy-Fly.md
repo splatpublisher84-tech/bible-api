@@ -1,10 +1,10 @@
 ---
 id: TASK-1
 title: Fix throttler trustProxy (rate-limit hong sau proxy Fly)
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-07-10 17:09'
-updated_date: '2026-07-10 18:21'
+updated_date: '2026-07-10 18:55'
 labels:
   - security
 dependencies: []
@@ -36,5 +36,5 @@ FastifyAdapter mac dinh trustProxy=false -> request.ip la IP proxy Fly, moi user
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-B DONE: full suite 33/33 pass (28 cu + 5 moi), khong regression. CON LAI (A): verify thuc nghiem Fly-Client-IP tren app live (can deploy).
+DONE + deployed + verified tren prod. Rate-limit gio key theo Fly-Client-IP (getTracker), khong dung trustProxy:true. VERIFY THUC NGHIEM tren app live (IP_DEBUG=1, /api/debug/ip): gui 'Fly-Client-IP: 9.9.9.9' gia -> Fly GHI DE, tracker van = IP that (9.9.9.9 bi vut) => KHONG spoof duoc. XFF gia bi bo qua. reqIp=172.16.x (IP noi bo Fly, chung cho moi client = bug goc). Full test 33/33. Endpoint debug/ip giu lai (inert, IP_DEBUG unset) dung lai cho TASK-2. Commit 75c5dfe, deployed.
 <!-- SECTION:NOTES:END -->
