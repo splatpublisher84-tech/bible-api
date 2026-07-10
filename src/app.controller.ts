@@ -1,4 +1,6 @@
-import { Controller, Get, NotFoundException } from '@nestjs/common';
+import { Controller, Get, NotFoundException, Req } from '@nestjs/common';
+import type { FastifyRequest } from 'fastify';
+import { clientIpTracker } from './common/client-ip';
 
 // Route gốc (ngoài prefix /api). /demo, /dashboard ở ViewsModule.
 @Controller()
@@ -26,5 +28,20 @@ export class AppController {
       throw new NotFoundException('Not found');
     }
     throw new Error('Sentry test error — cố ý để kiểm tra tích hợp Sentry');
+  }
+
+  // Debug: xem Fly xử lý header Fly-Client-IP thế nào (verify chống-spoof cho rate-limit).
+  // INERT (404) trừ khi bật IP_DEBUG=1. Dùng lại được khi thêm Cloudflare (TASK-2).
+  @Get('debug/ip')
+  debugIp(@Req() req: FastifyRequest) {
+    if (process.env.IP_DEBUG !== '1') {
+      throw new NotFoundException('Not found');
+    }
+    return {
+      flyClientIp: req.headers['fly-client-ip'] ?? null,
+      xForwardedFor: req.headers['x-forwarded-for'] ?? null,
+      reqIp: req.ip,
+      rateLimitTracker: clientIpTracker(req, {} as never),
+    };
   }
 }
