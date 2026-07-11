@@ -64,13 +64,15 @@ async function bootstrap() {
     done();
   });
 
-  // Swagger UI tại /api-docs
-  const swaggerConfig = new DocumentBuilder()
-    .setTitle('Bible API')
-    .setDescription('REST API dữ liệu Kinh Thánh (song ngữ Anh/Việt)')
-    .setVersion('1.0.0')
-    .build();
-  SwaggerModule.setup('api-docs', app, SwaggerModule.createDocument(app, swaggerConfig));
+  // Swagger UI tại /api-docs — TẮT ở production để giảm bề mặt lộ contract (bật lại: ENABLE_SWAGGER=1)
+  if (process.env.NODE_ENV !== 'production' || process.env.ENABLE_SWAGGER === '1') {
+    const swaggerConfig = new DocumentBuilder()
+      .setTitle('Bible API')
+      .setDescription('REST API dữ liệu Kinh Thánh (song ngữ Anh/Việt)')
+      .setVersion('1.0.0')
+      .build();
+    SwaggerModule.setup('api-docs', app, SwaggerModule.createDocument(app, swaggerConfig));
+  }
 
   const port = Number(process.env.PORT) || 3000;
   await app.listen(port, '0.0.0.0');
