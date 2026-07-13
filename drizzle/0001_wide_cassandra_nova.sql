@@ -1,0 +1,1 @@
+ALTER TABLE "book_names" ALTER COLUMN "abbr" DROP NOT NULL;

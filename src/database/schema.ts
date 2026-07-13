@@ -52,7 +52,7 @@ export const bookNames = pgTable(
       .notNull()
       .references(() => books.id),
     name: varchar('name', { length: 50 }).notNull(),
-    abbr: varchar('abbr', { length: 10 }).notNull(),
+    abbr: varchar('abbr', { length: 10 }),
   },
   (t) => [unique().on(t.translationId, t.bookId)]
 );

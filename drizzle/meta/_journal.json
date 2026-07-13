@@ -8,6 +8,13 @@
       "when": 1783268718927,
       "tag": "0000_init",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1783549316530,
+      "tag": "0001_wide_cassandra_nova",
+      "breakpoints": true
     }
   ]
 }
