@@ -95,4 +95,7 @@ flyctl deploy --image <previous-image>
   người vận hành hiện tại cũng là chủ mọi tài khoản (mục 2), không có "người cũ" bên ngoài.
 
 ## 7. Liên hệ / bàn giao
-`[CẦN ĐIỀN: ai là người liên hệ khi sự cố? người bàn giao gốc? nhóm vận hành?]`
+- **Đầu mối duy nhất (on-call + vận hành + owner mọi tài khoản):** `splatpublisher84@gmail.com`
+  (email cá nhân: `nvs266@gmail.com` — cùng một người; xem mục 2).
+- Không có người bàn giao gốc bên ngoài hay nhóm vận hành riêng — dự án 1 người.
+- Cộng tác viên data (PR #7, 12 bản dịch): `@nvhai272` (GitHub).
