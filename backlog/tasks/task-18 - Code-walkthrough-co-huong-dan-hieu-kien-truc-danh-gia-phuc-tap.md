@@ -4,9 +4,10 @@ title: Danh gia ban nhap hien tai so voi spec san pham
 status: To Do
 assignee: []
 created_date: '2026-07-17 13:26'
-updated_date: '2026-07-17 14:42'
+updated_date: '2026-07-17 17:32'
 labels: []
-dependencies: []
+dependencies:
+  - TASK-22
 priority: high
 ordinal: 18000
 ---
