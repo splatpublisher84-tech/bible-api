@@ -1,10 +1,10 @@
 ---
 id: TASK-10
 title: Chuyen Dependabot sang Renovate (fix tan goc bug lockfile)
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-07-10 17:09'
-updated_date: '2026-07-17 12:17'
+updated_date: '2026-07-17 12:32'
 labels:
   - pr
 dependencies: []
@@ -30,4 +30,12 @@ Các bước:
 
 <!-- SECTION:NOTES:BEGIN -->
 Lý do chọn Renovate thay vì workflow tự-vá lockfile: giải quyết tận gốc, ít mảnh tự chế. Tham khảo: docs.renovatebot.com/bot-comparison
+
+Hoàn tất 17/07/2026: Renovate app cài (Renovate Only + Scan and Alert), PR #10 merge với config automerge patch/minor + group actions + schedule thứ Hai + lockFileMaintenance monthly. PR Dependabot #8/#9 đã tự đóng. dependabot.yml xóa; runbook dependabot-lockfile.md đánh dấu lỗi thời.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Chuyển Dependabot → Renovate hoàn tất: config merged (PR #10), dependabot.yml removed, runbook archived. Verify cuối: chờ đợt chạy đầu của Renovate (sáng thứ Hai) mở PR xanh CI.
+<!-- SECTION:FINAL_SUMMARY:END -->

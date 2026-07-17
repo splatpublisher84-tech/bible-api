@@ -1,4 +1,10 @@
-# Runbook: Dependabot npm PR fail `npm ci` (thiếu `@esbuild/*` trong lock)
+# [LỖI THỜI — 17/07/2026] Runbook: Dependabot npm PR fail `npm ci` (thiếu `@esbuild/*` trong lock)
+
+> ⚠️ **Không còn áp dụng.** Repo đã chuyển từ Dependabot sang **Renovate** (PR #10,
+> `renovate.json`) — Renovate regen lockfile bằng npm thật nên không dính bug này.
+> `.github/dependabot.yml` đã xóa. Giữ file này làm tư liệu lịch sử; nếu lockfile
+> local lỗi `npm ci` (thiếu `@emnapi/*`...), chờ PR `lockFileMaintenance` hằng tháng
+> của Renovate hoặc regen trên Linux theo các bước bên dưới.
 
 ## Triệu chứng
 PR npm của Dependabot (thường là group `production-dependencies`) đỏ ở CI:
