@@ -2,12 +2,15 @@
 
 Bible API — REST backend phục vụ dữ liệu Kinh Thánh từ PostgreSQL.
 Hỗ trợ nhiều bản dịch, tên sách đa ngôn ngữ (Anh/Việt), tìm kiếm toàn văn,
-Verse of the Day. **Đang chạy production** (KHÔNG phải dự án scaffold/giai đoạn đầu).
+Verse of the Day.
 
-- **Live:** https://bible-api-ibsnxg.fly.dev
+- **Live:** https://bible-api-ibsnxg.fly.dev (đang deploy thật, nhưng CHƯA có người dùng thật)
 - **Stack:** NestJS 11 (Fastify) + TypeScript + Drizzle ORM + PostgreSQL 16 + Docker
-- **Trạng thái:** Feature-complete. 7 nhóm endpoint đã implement đầy đủ + có test.
-  Refactor từ Express+JS+pg → NestJS+TS+Drizzle (2026), giữ nguyên contract API.
+- **Trạng thái (cập nhật 17/07/2026):** Về kỹ thuật: code hoàn chỉnh, 7 nhóm endpoint
+  có test, refactor từ Express+JS+pg → NestJS+TS+Drizzle (2026). Về sản phẩm: đây là
+  **bản nháp build nhanh, chưa chốt yêu cầu sản phẩm** — đang ở giai đoạn chốt spec (M1),
+  sau đó đánh giá giữ/sửa/bỏ từng phần (xem backlog TASK-18/19). API contract hiện tại
+  KHÔNG phải bất khả xâm phạm; thay đổi lớn cần bàn với owner trước.
 
 ## Commands
 
