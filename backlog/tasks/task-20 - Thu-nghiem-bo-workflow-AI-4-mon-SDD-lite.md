@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@claude'
 created_date: '2026-07-17 14:35'
-updated_date: '2026-07-17 17:05'
+updated_date: '2026-07-17 17:18'
 labels: []
 dependencies: []
 priority: high
@@ -28,7 +28,7 @@ Dieu kien dao thai: mon nao khong duoc dung thuong xuyen sau 2-3 tuan thi xoa. T
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [ ] #1 Sau 2-3 tuan: danh gia giu/xoa tung mon
-- [ ] #2 3 mon duoc dung tren bible-api (AGENTS.md boundaries 3 tang, Stop hook, /ship)
+- [x] #2 3 mon duoc dung tren bible-api (AGENTS.md boundaries 3 tang, Stop hook, /ship)
 <!-- AC:END -->
 
 ## Implementation Plan
@@ -58,4 +58,6 @@ PHAN BIEN DOC LAP (17/07, refute-agent): (1) AGENTS.md — WEAKENED: study ETH Z
 QUYET DINH 17/07 (sau vong phan bien): CAT /spec-interview khoi scope — mon duy nhat khong co bang chung gia tri (anecdote-only), dung nguyen tac 'promote prompt thanh command chi khi da go lap lai nhieu lan' (chua go lan nao). Vong spec M1 se lam bang hoi thoai thuong; y tuong 'challenge lenses' (pre-mortem/inversion/MVP-cut) van dung duoc trong hoi thoai, khong can command. Task con 3 mon: boundaries 3 tang / Stop hook / /ship.
 
 NGHIEN CUU CO CHE REVIEW (18/07): cong dong hau nhu KHONG lam scheduled pruning — pattern thuc te la 'rot until failure' (pruning khi Claude bat dau lo rule); 1 practitioner dang tin duy tri duoc = monthly checklist 5 phut. Khong co bao cao nao ve 'review sau N tuan' duoc thuc thi dung hen. => Co che chon: TASK-21 (review 2026-08-07, dep TASK-20) voi lenh do NHUNG SAN trong task (grep transcript ~/.claude/projects dem /ship — da verify hoat dong; hook tu ghi log). RANG BUOC DESIGN MOI cho Stop hook: phai append timestamp + ket qua (block/pass) vao log file ngay tu dau — khong ghi log thi den ngay review khong co du lieu, khong tai tao lai duoc.
+
+TRIEN KHAI XONG (18/07, commit 17146c6): AGENTS.md boundaries 3 tang (147->160 dong, duoi budget 200; sua luon ref stale votd.controller.js); .claude/hooks/stop-verify.sh + settings.json (test tay 3 nhanh: stop_hook_active->pass, no-changes->pass, file TS loi->BLOCK exit 2, log ghi dung); .claude/commands/ship.md (harness da nhan dien skill /ship). AC con lai = review 07/08 (TASK-21).
 <!-- SECTION:NOTES:END -->
