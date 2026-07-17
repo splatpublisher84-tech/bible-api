@@ -101,5 +101,7 @@ flyctl deploy --image <previous-image>
 ## 7. Liên hệ / bàn giao
 - **Đầu mối duy nhất (on-call + vận hành + owner mọi tài khoản):** `splatpublisher84@gmail.com`
   (email cá nhân: `nvs266@gmail.com` — cùng một người; xem mục 2).
-- Không có người bàn giao gốc bên ngoài hay nhóm vận hành riêng — dự án 1 người.
-- Cộng tác viên data (PR #7, 12 bản dịch): `@nvhai272` (GitHub).
+- Không có người bàn giao gốc bên ngoài hay nhóm vận hành riêng.
+- Cộng tác viên: `@nvhai272` (GitHub, **có quyền write** — data 12 bản dịch, PR #7).
+  Ai có write đều đánh tag `v*` (trigger deploy) được, nhưng environment `production`
+  có **required reviewer** — chỉ owner duyệt mới deploy thật.
