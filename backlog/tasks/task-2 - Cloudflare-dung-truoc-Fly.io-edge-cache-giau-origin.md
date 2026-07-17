@@ -1,10 +1,10 @@
 ---
 id: TASK-2
 title: Cloudflare dung truoc Fly.io (edge cache + giau origin)
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-07-10 17:09'
-updated_date: '2026-07-11 17:07'
+updated_date: '2026-07-17 11:34'
 labels:
   - security
 dependencies: []
@@ -28,4 +28,12 @@ PARKED (2026-07-12) — chan boi prerequisite: chua co custom domain (Fly certs 
 - CF free rate-limit (1 rule, per-IP 10s) KHONG chan crawler phan tan; cache moi la thu chan.
 - Da co san: buoc setup (fly certs add + CF proxied + Full strict + Cache Rule), code CloudflareOnlyGuard (net.BlockList dai IP CF) trong ket qua workflow wf_f2fe4573. Khi co domain -> lay ra dung.
 DECISION: user hoan TASK-2, uu tien hardening re truoc (TASK-3/4/6/7).
+
+Quyết định KHÔNG làm: Cloudflare không có gói free tier phù hợp với quy mô dự án hiện tại. Có thể mở lại nếu nhu cầu edge cache / giấu origin trở nên cấp thiết.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Đóng không thực hiện (won't do) — free tier Cloudflare không phù hợp dự án hiện giờ, quyết định của owner 17/07/2026.
+<!-- SECTION:FINAL_SUMMARY:END -->
