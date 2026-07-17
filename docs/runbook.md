@@ -91,7 +91,8 @@ flyctl deploy --image <previous-image>
 - Đặt qua: `flyctl secrets set KEY=VALUE` (KHÔNG commit `.env`).
 - Biến cần có: `DB_HOST/PORT/USER/PASSWORD/NAME`, `METRICS_KEY`, (tuỳ chọn) `ALLOWED_ORIGINS`, `LOG_LEVEL`.
 - ⚠️ Nếu dự án nhận từ người khác: **nên xoay vòng (đổi) toàn bộ secret** — mật khẩu DB,
-  `METRICS_KEY` — vì người cũ có thể vẫn biết. `[CẦN ĐIỀN: đã đổi chưa? ngày nào?]`
+  `METRICS_KEY` — vì người cũ có thể vẫn biết. **Quyết định 17/07/2026: KHÔNG đổi** —
+  người vận hành hiện tại cũng là chủ mọi tài khoản (mục 2), không có "người cũ" bên ngoài.
 
 ## 7. Liên hệ / bàn giao
 `[CẦN ĐIỀN: ai là người liên hệ khi sự cố? người bàn giao gốc? nhóm vận hành?]`
