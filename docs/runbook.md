@@ -19,10 +19,10 @@ phải điền, KHÔNG được đoán.
 
 Không có quyền = không sửa được khi sập. Kiểm tra và ghi lại:
 
-- [ ] **Supabase** — ai sở hữu? `[CẦN ĐIỀN]` _(đã resume DB được 19/06/2026 → có vẻ có quyền)_
-- [ ] **Fly.io** — ai sở hữu? `[CẦN ĐIỀN]` _(máy này chưa `flyctl auth login`)_
-- [ ] **GitHub org `splatpublisher84-tech`** — ai admin? `[CẦN ĐIỀN]`
-- [ ] **Tài khoản git `nvs266@gmail.com`** (người commit gốc) — của ai? `[CẦN ĐIỀN]`
+- [x] **Supabase** — sở hữu: `splatpublisher84@gmail.com` _(xác nhận 17/07/2026)_
+- [x] **Fly.io** — sở hữu: `splatpublisher84@gmail.com`, org `personal` _(xác nhận 17/07/2026 — đã login, set secret và deploy thành công từ máy này)_
+- [x] **GitHub org `splatpublisher84-tech`** — admin: `splatpublisher84@gmail.com` _(xác nhận 17/07/2026)_
+- [x] **Tài khoản git `nvs266@gmail.com`** (người commit gốc) — tài khoản cá nhân của chính người vận hành hiện tại (cùng người với `splatpublisher84@gmail.com`)
 
 ## 3. Sự cố thường gặp
 
