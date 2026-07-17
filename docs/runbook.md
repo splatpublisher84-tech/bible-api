@@ -29,8 +29,12 @@ Không có quyền = không sửa được khi sập. Kiểm tra và ghi lại:
 ### 3.1. Database không kết nối được (Supabase pause)
 **Triệu chứng:** `/api/status` báo `database: error`, `getaddrinfo ENOTFOUND db.<...>.supabase.co`.
 **Nguyên nhân hay gặp:** Supabase free tier **tự pause sau ~1 tuần không hoạt động**.
-**Cách khôi phục:** `[CẦN ĐIỀN — bạn vừa làm ngày 19/06/2026, ghi lại CHÍNH XÁC các bước:
-đăng nhập Supabase dashboard → chọn project → Resume? mất bao lâu?]`
+**Cách khôi phục** _(quy trình chuẩn Supabase — người làm 19/06/2026 không còn nhớ chi tiết,
+ghi lại theo docs; lần tới gặp sự cố hãy cập nhật thời gian thực tế)_:
+1. Đăng nhập https://supabase.com/dashboard bằng `splatpublisher84@gmail.com`.
+2. Chọn project Bible API — project pause sẽ hiện trạng thái "Paused" kèm nút **Restore project**.
+3. Bấm Restore và chờ (thường 1–5 phút tùy kích thước DB; DB này ~41MB nên nhanh).
+4. Verify: `curl -s https://bible-api-ibsnxg.fly.dev/api/status | jq .database` → `status: ok`.
 **Phòng ngừa:** cân nhắc ping định kỳ giữ DB "ấm", hoặc nâng tier.
 
 ### 3.2. Request đầu tiên chậm 3-5s (cold start)
