@@ -1,10 +1,10 @@
 ---
 id: TASK-20
-title: Thu nghiem bo workflow AI 4 mon (SDD-lite)
+title: Dung bo workflow SDD-lite cho Claude Code (context file + hook + 2 commands)
 status: To Do
 assignee: []
 created_date: '2026-07-17 14:35'
-updated_date: '2026-07-17 14:35'
+updated_date: '2026-07-17 14:42'
 labels: []
 dependencies: []
 priority: high
@@ -14,12 +14,12 @@ ordinal: 20000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Ket qua nghien cuu cong dong 07/2026 (3 dot, 8 nhom research agents - xem note). Quyet dinh: KHONG cai framework (spec-kit/Kiro/Superpowers deu bi thuc te bac bo - cham ~10x, token bloat, agent phot lo spec). Ap dung 'SDD-lite' = 4 mon tu che, moi mon la nguyen lieu cong dong da kiem chung:
-1. AGENTS.md chuan 6-muc (commands/testing/structure/style-1-snippet/git/boundaries) + boundaries 3 tang (luon lam / hoi truoc / cam) - nguon: GitHub study 2500+ repos, Addy Osmani.
-2. Stop hook chay npm test + typecheck (agent khong the tuyen bo xong khi do) - nguon: Anthropic hooks guide, Kent Beck (agent se xoa test do neu khong chan).
-3. /ship: verify -> commit -> push (lenh duoc chay nhieu nhat thuc te - Boris Cherny, anthropics/claude-code).
-4. /spec-interview: AI phong van tung cau -> viet spec 1 trang (Objective/Context/Out-of-scope/AC dang EARS/Boundaries) - pattern duy nhat song sot cua mang planning (Thariq gist, Superpowers brainstorming). Spec la do dung 1 lan, ship xong dan vao task.
-DIEU KIEN DAO THAI: sau 2-3 tuan dung that, mon nao khong duoc chay thuong xuyen thi XOA. /spec-interview phai chung minh trong vong spec M1. Muc tieu dai han: tach thanh template tai dung cho du an khac.
+Ap dung ket qua nghien cuu cong dong 07/2026 (bang chung day du o Notes): khong cai framework SDD/skill nang; thay vao do dung 4 thanh phan tu che, check-in vao repo de tai dung cho du an khac:
+1. AGENTS.md theo chuan 6 muc (commands, testing, structure, code style, git workflow, boundaries) — boundaries chia 3 tang: luon lam / hoi truoc / cam.
+2. Hook chan agent tuyen bo hoan thanh khi test/typecheck con do.
+3. Lenh /ship: verify -> commit -> push.
+4. Lenh /spec-interview: AI phong van owner tung cau roi viet spec 1 trang (Objective / Context / Out of scope / Acceptance criteria / Boundaries); spec la artifact dung 1 lan, ship xong luu vao task lien quan.
+Dieu kien dao thai: thanh phan nao khong duoc dung thuong xuyen sau 2-3 tuan thi xoa; /spec-interview phai chung minh gia tri trong vong viet spec san pham (M1).
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
