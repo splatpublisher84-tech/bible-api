@@ -115,11 +115,25 @@ votd `NULLS LAST` + hash fallback, Strong markup raw).
 `PORT` (3000), `NODE_ENV`, `DB_HOST/PORT/USER/PASSWORD/NAME`, `METRICS_KEY`,
 `ALLOWED_ORIGINS` (CORS, tuỳ chọn), `LOG_LEVEL` (tuỳ chọn).
 
-## Ranh giới & điều cần biết (boundaries)
+## Ranh giới (boundaries)
 
-- ❌ KHÔNG commit `.env` (chứa mật khẩu DB). Secret production đặt qua Fly.io.
-- ⚠️ KHÔNG có write/admin API — dữ liệu chỉ đổi qua SQL migration / script import.
-- 🔴 **Code chết đã biết:** `votd_calendar` rỗng → VOTD luôn chọn theo hash (`hashDate()` trong `votd.controller.js`), nhánh calendar không bao giờ chạy. Bảng `book_aliases` không endpoint nào dùng.
+**Luôn làm (không cần hỏi):**
+- Chạy `npm run check` + `npm run typecheck` trước khi tuyên bố xong việc sửa code.
+- Parameterized query, Zod validate ở DTO, `LIMIT` mọi list query (như mục Quy ước).
+
+**Hỏi owner trước:**
+- Thay đổi API contract (path/shape response) — sản phẩm đang chốt spec, contract chưa khóa nhưng đổi lớn phải bàn.
+- Đổi schema DB, thêm dependency mới, đổi cấu hình deploy (fly.toml, Dockerfile, CI).
+- Xóa code/bảng "chết" (xem dưới) — chờ kết luận spec M1.
+
+**Cấm:**
+- ❌ Commit `.env` (mật khẩu DB). Secret production chỉ qua `flyctl secrets set`.
+- ❌ Tự deploy (`flyctl deploy`) hay push tag `v*` (trigger CD) — chỉ user chạy, qua skill `/deploy`.
+- ❌ Thêm write/admin API — dữ liệu chỉ đổi qua SQL migration / script import.
+- ❌ Chạy `drizzle-kit migrate` lên prod chưa baseline (xem mục Schema).
+
+**Điều cần biết (không phải việc cần làm):**
+- 🔴 Code chết đã biết: `votd_calendar` rỗng → VOTD luôn chọn theo hash, nhánh calendar không bao giờ chạy. Bảng `book_aliases` không endpoint nào dùng.
 - 🟡 Strong's (`{G2316}`) nằm thô trong text KJV, API không parse — client tự xử.
 - 🟡 `METRICS_KEY` truyền qua URL (`?key=`) và nhúng trong HTML dashboard — lộ trong log/referrer. Cân nhắc chuyển sang header.
 
