@@ -8,7 +8,7 @@ assignee:
   - '@snowstorm6'
   - '@claude'
 created_date: '2026-07-17 14:35'
-updated_date: '2026-07-19 06:41'
+updated_date: '2026-07-19 07:00'
 labels: []
 dependencies: []
 documentation:
@@ -123,4 +123,6 @@ Bien Bible API thanh backend rieng cho app mobile doc Kinh Thanh (cua owner): da
 LUU Y RUI RO da canh bao owner: cong soan curate x6 ngon ngu la rat lon voi solo dev; owner van chot om het. Supabase free 500MB — 7 ban text (~62k cau/ban) can kiem dung luong khi import.
 
 SPEC DA CHUYEN NHA (19/07): spec chinh thuc nam o doc-1 'Bible API Product Spec' (backlog/docs/, xem: backlog doc view doc-1 --plain), phien ban v1.1 co FR/AC-ID. Ban 'SPEC M1 v1.0' trong notes phia tren chi con gia tri lich su — DUNG dung lam nguon su that. Quy uoc moi: task tham chieu spec bang dong 'Implements: FR-n (AC-n.m)' trong description + co --doc; khong duy tri bang nguoc spec->task (owner bo), tra nguoc bang: backlog search 'FR-n'.
+
+SHIP 19/07 (commit b902d1a): hop nhat 2 phien lam viec song song (rebase co conflict). Giu: hook/settings/ship.md cua phien 17-18/07 (hook co log); spec doc-1 + /spec-interview + research cua phien 18-19/07. Trung ID task: research 21->25, TikTok 22->26. Verify: check+typecheck+build xanh; npm test SKIP (may khong co Docker/DB) — diff khong dung code runtime.
 <!-- SECTION:NOTES:END -->
