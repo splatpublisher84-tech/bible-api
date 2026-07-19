@@ -6,10 +6,12 @@ Verse of the Day.
 
 - **Live:** https://bible-api-ibsnxg.fly.dev (đang deploy thật, nhưng CHƯA có người dùng thật)
 - **Stack:** NestJS 11 (Fastify) + TypeScript + Drizzle ORM + PostgreSQL 16 + Docker
-- **Trạng thái (cập nhật 17/07/2026):** Về kỹ thuật: code hoàn chỉnh, 7 nhóm endpoint
+- **Trạng thái (cập nhật 19/07/2026):** Về kỹ thuật: code hoàn chỉnh, 7 nhóm endpoint
   có test, refactor từ Express+JS+pg → NestJS+TS+Drizzle (2026). Về sản phẩm: đây là
-  **bản nháp build nhanh, chưa chốt yêu cầu sản phẩm** — đang ở giai đoạn chốt spec (M1),
-  sau đó đánh giá giữ/sửa/bỏ từng phần (xem backlog TASK-18/19). API contract hiện tại
+  **bản nháp build nhanh** — spec sản phẩm chính thức: **`backlog doc view doc-1 --plain`**
+  (Bible API Product Spec, section có FR/AC-ID; task implement ghi `Implements: FR-n`
+  ở dòng đầu description + link `--doc`, KHÔNG copy nội dung spec vào task). Bước kế:
+  đánh giá giữ/sửa/bỏ từng phần theo spec (TASK-18/19). API contract hiện tại
   KHÔNG phải bất khả xâm phạm; thay đổi lớn cần bàn với owner trước.
 
 ## Commands
@@ -117,25 +119,29 @@ votd `NULLS LAST` + hash fallback, Strong markup raw).
 
 ## Ranh giới (boundaries)
 
-**Luôn làm (không cần hỏi):**
+### ✅ Luôn làm (không cần hỏi)
+- Parameterized query qua Drizzle builder — KHÔNG nối chuỗi SQL. Zod validate ở DTO, `LIMIT` mọi list query.
 - Chạy `npm run check` + `npm run typecheck` trước khi tuyên bố xong việc sửa code.
-- Parameterized query, Zod validate ở DTO, `LIMIT` mọi list query (như mục Quy ước).
+- Đổi schema: sửa `schema.ts` → `drizzle-kit generate` → commit migration.
+- Giữ format lỗi cũ (`{error}` / `{error,details}`) và Cache-Control hiện tại.
 
-**Hỏi owner trước:**
-- Thay đổi API contract (path/shape response) — sản phẩm đang chốt spec, contract chưa khóa nhưng đổi lớn phải bàn.
+### ⚠️ Hỏi trước khi làm
+- Thay đổi API contract (đường dẫn, shape response) — theo spec `doc-1`, contract chưa khóa nhưng đổi lớn phải bàn.
 - Đổi schema DB, thêm dependency mới, đổi cấu hình deploy (fly.toml, Dockerfile, CI).
-- Xóa code/bảng "chết" (xem dưới) — chờ kết luận spec M1.
+- Xoá code/bảng "có vẻ thừa" (`votd_calendar`, `book_aliases`) — thuộc phạm vi TASK-15/18.
+- Chạy migration lên DB production (cần baseline, xem mục Schema & data).
 
-**Cấm:**
-- ❌ Commit `.env` (mật khẩu DB). Secret production chỉ qua `flyctl secrets set`.
-- ❌ Tự deploy (`flyctl deploy`) hay push tag `v*` (trigger CD) — chỉ user chạy, qua skill `/deploy`.
-- ❌ Thêm write/admin API — dữ liệu chỉ đổi qua SQL migration / script import.
-- ❌ Chạy `drizzle-kit migrate` lên prod chưa baseline (xem mục Schema).
+### ❌ Cấm
+- Commit `.env` hay bất kỳ secret nào. Secret production đặt qua `flyctl secrets set`.
+- Tự deploy (`flyctl deploy`) hay push tag `v*` (trigger CD) — chỉ user chạy, qua skill `/deploy`.
+- Chạy `drizzle-kit migrate` mù lên prod (đụng bảng đã tồn tại).
+- Tự thêm write/admin API — dữ liệu chỉ đổi qua SQL migration / script import.
+- Force-push hoặc rewrite history trên `main`.
 
-**Điều cần biết (không phải việc cần làm):**
-- 🔴 Code chết đã biết: `votd_calendar` rỗng → VOTD luôn chọn theo hash, nhánh calendar không bao giờ chạy. Bảng `book_aliases` không endpoint nào dùng.
-- 🟡 Strong's (`{G2316}`) nằm thô trong text KJV, API không parse — client tự xử.
-- 🟡 `METRICS_KEY` truyền qua URL (`?key=`) và nhúng trong HTML dashboard — lộ trong log/referrer. Cân nhắc chuyển sang header.
+### 📌 Điều cần biết (không phải lỗi, đừng "sửa")
+- 🔴 **Code chết đã biết:** `votd_calendar` rỗng → VOTD luôn chọn theo hash (`hashDate()`), nhánh calendar không bao giờ chạy. Bảng `book_aliases` không endpoint nào dùng.
+- 🟡 Strong's (`{G2316}`) nằm thô trong text KJV, API không parse — client tự xử (TASK-16).
+- 🟡 `METRICS_KEY` truyền qua URL (`?key=`) và nhúng trong HTML dashboard — lộ trong log/referrer (TASK-5).
 
 <!-- BACKLOG.MD GUIDELINES START -->
 <CRITICAL_INSTRUCTION>
